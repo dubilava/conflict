@@ -13,14 +13,14 @@ library(rnaturalearthdata)
 # 
 # acled_dt <- as.data.table(acled_df)
 # 
-# save(acled_dt,file="acled.RData")
+# save(acled_dt,file="Local/acled.RData")
 
 rm(list=ls())
 gc()
 
 "%!in%" <- Negate("%in%")
 
-load("acled.RData")
+load("Local/acled.RData")
 
 acled_dt$latitude <- as.numeric(acled_dt$latitude)
 acled_dt$longitude <- as.numeric(acled_dt$longitude)
@@ -51,7 +51,7 @@ gg_map <- ggplot(data = africa) +
   scale_size(range=c(.5,2.5))+
   labs(title="Conflict and Violence",subtitle="all incidents",caption="Data Source: Armed Conflict Location & Event Data \n Project (ACLED); www.acleddata.com")+
   theme_void()+
-  theme(legend.position=c(.15,.4),legend.justification=c(0,1),legend.title=element_text(size=14),legend.text=element_text(size=14,hjust=1),plot.caption=element_text(color="gray50",face="italic",size=12),plot.title=element_text(size=16))
+  theme(legend.position=c(.15,.4),legend.justification=c(0,1),legend.title=element_blank(),legend.text=element_text(size=14,hjust=1),plot.caption=element_text(color="gray50",face="italic",size=10),plot.title=element_text(size=16))
 
 gg_map
 
@@ -68,7 +68,7 @@ gg_fmap <- ggplot(data = africa) +
   scale_size(range=c(.5,2.5))+
   labs(title="Conflict and Violence",subtitle="all fatal incidents",caption="Data Source: Armed Conflict Location & Event Data \n Project (ACLED); www.acleddata.com")+
   theme_void()+
-  theme(legend.position=c(.15,.4),legend.justification=c(0,1),legend.title=element_text(size=14),legend.text=element_text(size=14,hjust=1),plot.caption=element_text(color="gray50",face="italic",size=12),plot.title=element_text(size=16))
+  theme(legend.position=c(.15,.4),legend.justification=c(0,1),legend.title=element_blank(),legend.text=element_text(size=14,hjust=1),plot.caption=element_text(color="gray50",face="italic",size=10),plot.title=element_text(size=16))
 
 gg_fmap
 
@@ -89,7 +89,7 @@ gg_vmap <- ggplot(data = africa) +
   scale_size(range=c(.5,2.5))+
   labs(title="Conflict and Violence",subtitle="violence against civilians",caption="Data Source: Armed Conflict Location & Event Data \n Project (ACLED); www.acleddata.com")+
   theme_void()+
-  theme(legend.position=c(.15,.4),legend.justification=c(0,1),legend.title=element_text(size=14),legend.text=element_text(size=14,hjust=1),plot.caption=element_text(color="gray50",face="italic",size=12),plot.title=element_text(size=16))
+  theme(legend.position=c(.15,.4),legend.justification=c(0,1),legend.title=element_blank(),legend.text=element_text(size=14,hjust=1),plot.caption=element_text(color="gray50",face="italic",size=10),plot.title=element_text(size=16))
 
 gg_vmap
 
@@ -106,7 +106,7 @@ gg_pmap <- ggplot(data = africa) +
   scale_size(range=c(.5,2.5))+
   labs(title="Conflict and Violence",subtitle="protests and riots",caption="Data Source: Armed Conflict Location & Event Data \n Project (ACLED); www.acleddata.com")+
   theme_void()+
-  theme(legend.position=c(.15,.4),legend.justification=c(0,1),legend.title=element_text(size=14),legend.text=element_text(size=14,hjust=1),plot.caption=element_text(color="gray50",face="italic",size=12),plot.title=element_text(size=16))
+  theme(legend.position=c(.15,.4),legend.justification=c(0,1),legend.title=element_blank(),legend.text=element_text(size=14,hjust=1),plot.caption=element_text(color="gray50",face="italic",size=10),plot.title=element_text(size=16))
 
 gg_pmap
 
