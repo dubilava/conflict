@@ -11,115 +11,120 @@ gc()
 
 "%!in%" <- Negate("%in%")
 
-
 load("dataset.RData")
 
-
-# dt <- dataset_dt[max_area==0,.(conflict=mean(incidents)),by=.(year,event)]
-# 
-# ggplot(dt,aes(x=year,y=conflict,color=event,group=event))+geom_line()
 
 dataset_dt[,`:=` (population_mln = population/1000000)]
 dataset_dt[,`:=` (population_ihs = log(population_mln+sqrt(population_mln^2+1)))]
 
-dataset_dt[,`:=` (incidents_dum=ifelse(incidents>0,1,0),fatalities_dum=ifelse(fatalities>0,1,0),agri=ifelse(crop=="None",0,1))]
-
-dataset_dt[,`:=` (price_ch=c(rep(NA,12),diff(price,12)),price_wtch=c(rep(NA,12),diff(price_wt,12))),by=.(xy,event)]
+dataset_dt[,`:=` (incidents_pop=incidents/population_mln,incidents_dum=ifelse(incidents>0,1,0),fatalities_dum=ifelse(fatalities>0,1,0),agri=ifelse(tot_area>.01,1,0))]
 
 datasub_dt <- dataset_dt[max_area>0,.(incidents=mean(incidents),area=mean(max_area)),by=.(season,event)]
 datasub_dt <- datasub_dt[order(event,season)]
 
-# base_vfe <- feols(incidents~max_area:i(season,ref=1,drop=0) | xy+yearmo, dataset_dt[event=="Protests"],se="cluster")
-# summary(base_vfe)
 
-# dataset_dt[,`:=` (harvest_l1=data.table::shift(harvest,n=1,type="lag"),harvest_l2=data.table::shift(harvest,n=2,type="lag"),harvest_l3=data.table::shift(harvest,n=3,type="lag"),harvest_f1=data.table::shift(harvest,n=1,type="lead"),harvest_f2=data.table::shift(harvest,n=2,type="lead")),by=.(xy,event)]
+datacomb_dt <- dataset_dt[,.(incidents=sum(incidents),fatalities=sum(fatalities)),by=.(longitude,latitude,mo,xy,date,yearmo,year,month,season,crop,tot_area,max_area,agri,price,price_wt,price_ch,price_chwt,cocoa_ch,platinum_ch,population_mln,population_ihs)]
 
-# dataset_dt$postharvest <- as.factor(dataset_dt$postharvest)
-# dataset_dt$harvest <- as.factor(dataset_dt$harvest)
-
+datacomb_dt[,`:=` (incidents_pop=incidents/population_mln)]
 
 ## VIOLENCE
-base_vfe <- feols(incidents~price_ch:max_area | xy+yearmo+season, dataset_dt[event=="Violence"],se="cluster")
+base_vfe <- feols(incidents~price_ch:max_area | xy+yearmo+season, datacomb_dt,se="cluster")
 summary(base_vfe)
 
-harv_vfe <- feols(incidents~price_ch:max_area:season | xy+yearmo+season, dataset_dt[event=="Violence"],se="cluster")
+harv_vfe <- feols(incidents~price_ch:max_area:season | xy+yearmo+season, datacomb_dt,se="cluster")
 summary(harv_vfe)
 
-## PROTESTS
-base_pfe <- feols(incidents~price_ch:max_area | xy+yearmo+season, dataset_dt[event=="Protests"],se="cluster")
-summary(base_pfe)
+base1_vfe <- feols(incidents~price_ch:max_area | xy+yearmo+season, datacomb_dt[latitude<=23.5],se="cluster")
+summary(base1_vfe)
 
-harv_pfe <- feols(incidents~price_ch:max_area:season | xy+yearmo+season, dataset_dt[event=="Protests"],se="cluster")
-summary(harv_pfe)
+harv1_vfe <- feols(incidents~price_ch:max_area:season | xy+yearmo+season, datacomb_dt[latitude<=23.5],se="cluster")
+summary(harv1_vfe)
+
+base2_vfe <- feols(incidents~price_ch:max_area | xy+yearmo+season, datacomb_dt[population_mln >= 0.05],se="cluster")
+summary(base2_vfe)
+
+harv2_vfe <- feols(incidents~price_ch:max_area:season | xy+yearmo+season, datacomb_dt[population_mln >= 0.05],se="cluster")
+summary(harv2_vfe)
 
 ## print the latex table
-etable(base_vfe,harv_vfe,base_pfe,harv_pfe,cluster=~xy,tex=TRUE,digits=3,digits.stats = 3,title="Main Results",subtitles = c("Violence","Violence","Protests","Protests"))
+etable(base_vfe,harv_vfe,base1_vfe,harv1_vfe,base2_vfe,harv2_vfe,cluster=~xy,tex=TRUE,digits=3,digits.stats = 3,title="Baseline Results",subtitles = c("All","All","Sub","Sub","Pop","Pop"))
 
-sd(dataset_dt[max_area>0]$price)*summary(harv_vfe)$coefficients*datasub_dt[event=="Violence"]$area/datasub_dt[event=="Violence"]$incidents
+
+##--- PER MLN POP ---###
+
+base_vfe <- feols(incidents_pop~price_ch:max_area | xy+yearmo+season, datacomb_dt,se="cluster",weights=~population_mln)
+summary(base_vfe)
+
+harv_vfe <- feols(incidents_pop~price_ch:max_area:season | xy+yearmo+season, datacomb_dt,se="cluster",weights=~population_mln)
+summary(harv_vfe)
+
+base1_vfe <- feols(incidents_pop~price_ch:max_area | xy+yearmo+season, datacomb_dt[latitude<=23.5],se="cluster",weights=~population_mln)
+summary(base1_vfe)
+
+harv1_vfe <- feols(incidents_pop~price_ch:max_area:season | xy+yearmo+season, datacomb_dt[latitude<=23.5],se="cluster",weights=~population_mln)
+summary(harv1_vfe)
+
+base2_vfe <- feols(incidents_pop~price_ch:max_area | xy+yearmo+season, datacomb_dt[population_mln >= 0.05],se="cluster",weights=~population_mln)
+summary(base2_vfe)
+
+harv2_vfe <- feols(incidents_pop~price_ch:max_area:season | xy+yearmo+season, datacomb_dt[population_mln >= 0.05],se="cluster",weights=~population_mln)
+summary(harv2_vfe)
+
+## print the latex table
+etable(base_vfe,harv_vfe,base1_vfe,harv1_vfe,base2_vfe,harv2_vfe,cluster=~xy,tex=TRUE,digits=3,digits.stats = 3,title="Baseline Results",subtitles = c("All","All","Sub","Sub","Pop","Pop"))
+
+##---             ---###
+
+
+##--- DISAGGREGATED ---###
+
+harv1_vfe <- feols(incidents_pop~price_ch:max_area:season | xy+yearmo+season, dataset_dt[event==17],se="cluster",weights=~population_mln)
+summary(harv1_vfe)
+
+harv2_vfe <- feols(incidents_pop~price_ch:max_area:season | xy+yearmo+season, dataset_dt[event==27],se="cluster",weights=~population_mln)
+summary(harv2_vfe)
+
+harv3_vfe <- feols(incidents_pop~price_ch:max_area:season | xy+yearmo+season, dataset_dt[event==37],se="cluster",weights=~population_mln)
+summary(harv3_vfe)
+
+harv4_vfe <- feols(incidents_pop~price_ch:max_area:season | xy+yearmo+season, dataset_dt[event==47],se="cluster",weights=~population_mln)
+summary(harv4_vfe)
+
+harv5_vfe <- feols(incidents_pop~price_ch:max_area:season | xy+yearmo+season, dataset_dt[event==78],se="cluster",weights=~population_mln)
+summary(harv5_vfe)
+
+## print the latex table
+etable(harv1_vfe,harv2_vfe,harv3_vfe,harv4_vfe,harv5_vfe,cluster=~xy,tex=TRUE,digits=3,digits.stats = 3,title="Main Results",subtitles = c("State","Rebels","Political","Identity","Other"))
+
+
+harv1_vfe <- feols(incidents_pop~price_ch:max_area:season | xy+yearmo+season, dataset_dt[event==17 & latitude<=23.5],se="cluster",weights=~population_mln)
+summary(harv1_vfe)
+
+harv2_vfe <- feols(incidents_pop~price_ch:max_area:season | xy+yearmo+season, dataset_dt[event==27 & latitude<=23.5],se="cluster",weights=~population_mln)
+summary(harv2_vfe)
+
+harv3_vfe <- feols(incidents_pop~price_ch:max_area:season | xy+yearmo+season, dataset_dt[event==37 & latitude<=23.5],se="cluster",weights=~population_mln)
+summary(harv3_vfe)
+
+harv4_vfe <- feols(incidents_pop~price_ch:max_area:season | xy+yearmo+season, dataset_dt[event==47 & latitude<=23.5],se="cluster",weights=~population_mln)
+summary(harv4_vfe)
+
+harv5_vfe <- feols(incidents_pop~price_ch:max_area:season | xy+yearmo+season, dataset_dt[event==78 & latitude<=23.5],se="cluster",weights=~population_mln)
+summary(harv5_vfe)
+
+## print the latex table
+etable(harv1_vfe,harv2_vfe,harv3_vfe,harv4_vfe,harv5_vfe,cluster=~xy,tex=TRUE,digits=3,digits.stats = 3,title="Main Results",subtitles = c("State","Rebels","Political","Identity","Other"))
+
+##---               ---###
+
+
+
+
+sd(datacomb_dt[max_area>0]$price)*summary(harv_vfe)$coefficients*datasub_dt$area/datasub_dt$incidents
 sd(dataset_dt[max_area>0]$price)*summary(harv_pfe)$coefficients*datasub_dt[event=="Protests"]$area/datasub_dt[event=="Protests"]$incidents
 
-## VIOLENCE
-base_vfe <- feols(incidents~price_ch:max_area+population_mln | longitude+latitude+yearmo+season, dataset_dt[event=="Violence"])
-summary(base_vfe,se="twoway")
 
-harv_vfe <- feols(incidents~price_ch:max_area:season+population_mln | longitude+latitude++yearmo+season, dataset_dt[event=="Violence"])
-summary(harv_vfe,se="twoway")
-
-## PROTESTS
-base_pfe <- feols(incidents~price_ch:max_area+population_mln | longitude+latitude+yearmo+season, dataset_dt[event=="Protests"])
-summary(base_pfe,se="twoway")
-
-harv_pfe <- feols(incidents~price_ch:max_area:season+population_mln | longitude+latitude+yearmo+season, dataset_dt[event=="Protests"])
-summary(harv_pfe,se="twoway")
-
-## print the latex table
-etable(base_vfe,harv_vfe,base_pfe,harv_pfe,cluster=~longitude+latitude,tex=TRUE,digits=3,digits.stats = 3,title="Population Control",subtitles = c("Violence","Violence","Protests","Protests"))
-
-
-## VIOLENCE
-base_vfe <- feols(incidents~price_ch:max_area | xy+yearmo+season, dataset_dt[event=="Violence" & population >= 10000],se="cluster")
-summary(base_vfe)
-
-harv_vfe <- feols(incidents~price_ch:max_area:season | xy+yearmo+season, dataset_dt[event=="Violence" & population >= 10000],se="cluster")
-summary(harv_vfe)
-
-## PROTESTS
-base_pfe <- feols(incidents~price_ch:max_area | xy+yearmo+season, dataset_dt[event=="Protests" & population >= 10000],se="cluster")
-summary(base_pfe)
-
-harv_pfe <- feols(incidents~price_ch:max_area:season | xy+yearmo+season, dataset_dt[event=="Protests" & population >= 10000],se="cluster")
-summary(harv_pfe)
-
-## print the latex table
-etable(base_vfe,harv_vfe,base_pfe,harv_pfe,cluster=~xy,tex=TRUE,digits=3,digits.stats = 3,title="Main Results",subtitles = c("Violence","Violence","Protests","Protests"))
-
-
-## VIOLENCE
-base_vfe <- feols(incidents~price_ch:max_area | xy+yearmo+season, dataset_dt[event=="Violence" & latitude < 23.5],se="cluster")
-summary(base_vfe)
-
-harv_vfe <- feols(incidents~price_ch:max_area:season | xy+yearmo+season, dataset_dt[event=="Violence" & latitude < 23.5],se="cluster")
-summary(harv_vfe)
-
-## PROTESTS
-base_pfe <- feols(incidents~price_ch:max_area | xy+yearmo+season, dataset_dt[event=="Protests" & latitude < 23.5],se="cluster")
-summary(base_pfe)
-
-harv_pfe <- feols(incidents~price_ch:max_area:season | xy+yearmo+season, dataset_dt[event=="Protests" & latitude < 23.5],se="cluster")
-summary(harv_pfe)
-
-## print the latex table
-etable(base_vfe,harv_vfe,base_pfe,harv_pfe,cluster=~xy,tex=TRUE,digits=3,digits.stats = 3,title="Main Results",subtitles = c("Violence","Violence","Protests","Protests"))
-
-
-# datasub_dt <- dataset_dt[,.(incidents=mean(incidents),area=mean(max_area)),by=.(xy)]
-# 
-# datasub_dt <- datasub_dt[incidents>0 & area >0]
-# 
-# datasub_dt[,`:=` (one=area/incidents)]
-# 
-# mean(datasub_dt$one)
-
+###=====
 
 
 v_array <- array(dim=c(2,4,length(unique(dataset_dt$year))))
