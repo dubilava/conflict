@@ -21,11 +21,16 @@ africa <- ne_countries(continent = "africa",returnclass = "sf")
 # load the data
 load("dataset.RData")
 
-datacomb_dt <- dataset_dt[,.(incidents=sum(incidents),fatalities=sum(fatalities)),by=.(longitude,latitude,mo,xy,date,yearmo,year,month,season,crop,tot_area,max_area,price,price_wt,price_ch,price_chwt,cocoa_ch,platinum_ch,population)]
+datacomb_dt <- dataset_dt[,.(incidents=sum(incidents),fatalities=sum(fatalities)),by=.(longitude,latitude,mo,xy,date,yearmo,year,month,season_srt,season,season_end,crop,tot_area,max_area,price,price_wt,price_ch,price_chwt,cocoa_ch,platinum_ch,population)]
 
+# datasum_dt <- datacomb_dt[,.(incidents=sum(incidents),area=mean(max_area),price=mean(price_ch)),by=.(longitude,latitude,season)]
+# datasum_dt <- datasum_dt[area>0]
+# 
+# ggplot(datasum_dt,aes(x=season,y=incidents))+
+#   geom_point()
 
 ## harvest months
-datasub_dt <- datacomb_dt[yearmo=="2010-01" & max_area>=0.01]
+datasub_dt <- datacomb_dt[yearmo=="2010-01" & max_area >= 0.01]
 
 gg_map <- ggplot(data = africa) +
   geom_sf(color="gray",fill="white")+
@@ -163,7 +168,7 @@ gg_cereals <- ggplot(data = africa) +
 
 gg_cereals
 
-ggsave("map_crops_01.png",gg_cereals,width=6.5,height=6.5)
+ggsave("map_crops.png",gg_cereals,width=6.5,height=6.5)
 
 ##---
 
