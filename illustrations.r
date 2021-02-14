@@ -21,62 +21,54 @@ africa <- ne_countries(continent = "africa",returnclass = "sf")
 # load the data
 load("dataset.RData")
 
-datacomb_dt <- dataset_dt[,.(incidents=sum(incidents),fatalities=sum(fatalities)),by=.(longitude,latitude,mo,xy,date,yearmo,year,month,season_srt,season,season_end,crop,tot_area,max_area,price,price_wt,price_ch,price_chwt,cocoa_ch,platinum_ch,population)]
+dataset_dt[,`:=` (population_mln = population/1000000)]
+dataset_dt[,`:=` (incidents_pop=incidents/population_mln,incidents_dum=ifelse(incidents>0,1,0))]
 
-# datasum_dt <- datacomb_dt[,.(incidents=sum(incidents),area=mean(max_area),price=mean(price_ch)),by=.(longitude,latitude,season)]
-# datasum_dt <- datasum_dt[area>0]
-# 
-# ggplot(datasum_dt,aes(x=season,y=incidents))+
-#   geom_point()
+datacomb_dt <- dataset_dt[,.(incidents=sum(incidents),fatalities=sum(fatalities)),by=.(event,actor,longitude,latitude,mo,xy,date,yearmo,year,month,plant,season_srt,season,season_end,crop,tot_area,max_area,price,price_ch,price_d,cocoa_ch,platinum_ch,population,population_mln)]
+datacomb_dt[,`:=` (incidents_pop=incidents/population_mln,incidents_dum=ifelse(incidents>0,1,0))]
 
-## harvest months
-datasub_dt <- datacomb_dt[yearmo=="2010-01" & max_area >= 0.01]
+aggregate_dt <- datacomb_dt[,.(incidents=sum(incidents),price=mean(price),price_ch=mean(price_ch),max_area=mean(max_area),tot_area=mean(tot_area),population=mean(population),population_mln=mean(population_mln)),by=.(xy,year)]
 
-gg_map <- ggplot(data = africa) +
-  geom_sf(color="gray",fill="white")+
-  geom_point(data=datasub_dt,aes(x=longitude,y=latitude,color=season))+
-  scale_color_discrete(name="area")+
-  # scale_alpha(name="area",range=c(.5,.75))+
-  # scale_size(name="area",range=c(.5,4.5))+
-  labs(title="Harvest Months",subtitle="(grid-cells with harvested area \u2265 1%)",caption="Data Source: Center for Sustainability and the Global Environment \n Nelson Institute at University of Wisconsin-Madison \n https://nelson.wisc.edu/sage/data-and-models/crop-calendar-dataset/index.php")+
-  theme_void()+
-  theme(legend.position=c(.15,.52),legend.justification=c(0,1),legend.title=element_blank(),legend.text=element_text(size=14,hjust=1),plot.caption=element_text(color="gray50",face="italic",size=10),plot.title=element_text(size=16))
+aggregate_dt[,`:=` (incidents_pop=incidents/population_mln,incidents_dum=ifelse(incidents>0,1,0))]
 
-gg_map
+superaggregate_dt <- aggregate_dt[,.(incident_year=sum(incidents_dum),crop_area=mean(tot_area),population_mean=mean(population)),by=.(xy)]
 
-ggsave("map_harvest.png",gg_map,width=6.5,height=6.5)
+gg_scatter <- ggplot(superaggregate_dt,aes(x=log(population_mean),y=crop_area))+
+  geom_point(color="steelblue",alpha=.5)+
+  labs(title="Population and Crop Production",subtitle="(all grid-cells)",x="Population (log-scale)",y="Cropland Share",caption="Data Sources: Center for Sustainability and the Global Environment \u2013 Nelson Institute;\n NASA SEDAC \u2013 Gridded Population of the World, Version 4 (GPWv4)")+
+  theme_classic()+
+  theme(legend.position=c(.15,.52),legend.justification=c(0,1),legend.title=element_blank(),legend.text=element_text(size=14,hjust=0),plot.caption=element_text(color="gray50",face="italic",size=10),plot.title=element_text(size=16))
+## data sources: 
+## - Center for Sustainability and the Global Environment, Nelson Institute at University of Wisconsin-Madison, https://nelson.wisc.edu/sage/data-and-models/crop-calendar-dataset/index.php\n 
+## - NASA Socioeconomic Data and Applications Center (SEDAC), Documentation for Gridded Population of the World (GPWv4), https://sedac.ciesin.columbia.edu/data/collection/gpw-v4
 
-##---
+ggsave("scatter_pop_crop.png",gg_scatter,width=6.5,height=4.5)
 
-## population
-datasub_dt <- datacomb_dt[,.(population=mean(population)/1000000),by=.(longitude,latitude)]
-datasub_dt <- datasub_dt[population>=.1]
 
-gg_map <- ggplot(data = africa) +
-  geom_sf(color="gray",fill="white")+
-  geom_point(data=datasub_dt,aes(x=longitude,y=latitude,size=population,alpha=population),color="gray50")+
-  scale_alpha(range=c(.5,.75))+
-  scale_size(range=c(.5,4.5))+
-  labs(title="Population (million)",subtitle="(grid-cells with population \u2265 100K in 2010)",caption="Data Source: NASA Socioeconomic Data and Applications Center (SEDAC)\n Gridded Population of the World, Version 4 (GPWv4)\n https://sedac.ciesin.columbia.edu")+
-  theme_void()+
-  theme(legend.position=c(.15,.4),legend.justification=c(0,1),legend.title=element_blank(),legend.text=element_text(size=14,hjust=1),plot.caption=element_text(color="gray50",face="italic",size=10),plot.title=element_text(size=16))
+datacomb_dt <- merge(datacomb_dt,superaggregate_dt,by=c("xy"),all.x=T)
 
-gg_map
+descriptive1_dt <- datacomb_dt[,.(incidents_rate=mean(incidents_dum),incidents_sd=sd(incidents_dum))]
+descriptive2_dt <- datacomb_dt[incident_year>0,.(incidents_rate=mean(incidents_dum),incidents_sd=sd(incidents_dum))]
+descriptive3_dt <- datacomb_dt[tot_area>0,.(incidents_rate=mean(incidents_dum),incidents_sd=sd(incidents_dum))]
+descriptive4_dt <- datacomb_dt[tot_area>0 & incident_year>0,.(incidents_rate=mean(incidents_dum),incidents_sd=sd(incidents_dum))]
+descriptive5_dt <- datacomb_dt[population_mln>0.1,.(incidents_rate=mean(incidents_dum),incidents_sd=sd(incidents_dum))]
+descriptive6_dt <- datacomb_dt[population_mln>0.1 & incident_year>0,.(incidents_rate=mean(incidents_dum),incidents_sd=sd(incidents_dum))]
 
-ggsave("map_population.png",gg_map,width=6.5,height=6.5)
 
-##---
 
-## violence
-datasub_dt <- datacomb_dt[,.(incidents=sum(incidents)),by=.(longitude,latitude)]
-datasub_dt <- datasub_dt[incidents>=10]
+### FIGURES
+
+#-- Violence
+
+datasub_dt <- datacomb_dt[,.(incidents=sum(incidents)),by=.(longitude,latitude,event)]
+datasub_dt <- datasub_dt[event=="Violence" & incidents >= 10]
 
 gg_vmap <- ggplot(data = africa) +
   geom_sf(color="gray",fill="white")+
   geom_point(data=datasub_dt,aes(x=longitude,y=latitude,size=incidents,color=incidents,alpha=incidents),color="indianred")+
   scale_alpha(range=c(.5,.75))+
   scale_size(range=c(.5,4.5))+
-  labs(title="Violence Against Civilians",subtitle="(grid-cells with incidents \u2265 10 over 1997-2020 period)",caption="Data Source: Armed Conflict Location & Event Data \n Project (ACLED); www.acleddata.com")+
+  labs(title="Violence Against Civilians",subtitle="(grid-cells with incidents \u2265 10 over 1997-2020 period)",caption="Data Source: Armed Conflict Location & Event Data Project (ACLED)\n https://acleddata.com")+
   theme_void()+
   theme(legend.position=c(.15,.4),legend.justification=c(0,1),legend.title=element_blank(),legend.text=element_text(size=14,hjust=1),plot.caption=element_text(color="gray50",face="italic",size=10),plot.title=element_text(size=16))
 
@@ -85,15 +77,15 @@ gg_vmap
 ggsave("map_violence.png",gg_vmap,width=6.5,height=6.5)
 
 
-datasub_dt <- dataset_dt[,.(incidents=sum(incidents)),by=.(longitude,latitude,event)]
-datasub_dt <- datasub_dt[incidents>=5]
+datasub_dt <- dataset_dt[,.(incidents=sum(incidents)),by=.(longitude,latitude,event,actor)]
+datasub_dt <- datasub_dt[event=="Violence" & incidents>=5]
 
 gg_v1map <- ggplot(data = africa) +
   geom_sf(color="gray",fill="white")+
-  geom_point(data=datasub_dt[event==17],aes(x=longitude,y=latitude,size=incidents,color=incidents,alpha=incidents),color="indianred")+
+  geom_point(data=datasub_dt[actor=="state"],aes(x=longitude,y=latitude,size=incidents,color=incidents,alpha=incidents),color="gray60")+
   scale_alpha(range=c(.5,.75))+
   scale_size(range=c(.5,4.5))+
-  labs(title="Violence Against Civilians by State Forces",subtitle="(grid-cells with incidents \u2265 5 over 1997-2020 period)",caption="Data Source: Armed Conflict Location & Event Data \n Project (ACLED); www.acleddata.com")+
+  labs(title="Violence Involving State Forces",subtitle="(grid-cells with incidents \u2265 5 over 1997-2020 period)",caption="Data Source: Armed Conflict Location & Event Data Project (ACLED)\n https://acleddata.com")+
   theme_void()+
   theme(legend.position=c(.15,.4),legend.justification=c(0,1),legend.title=element_blank(),legend.text=element_text(size=14,hjust=1),plot.caption=element_text(color="gray50",face="italic",size=10),plot.title=element_text(size=16))
 
@@ -104,10 +96,10 @@ ggsave("map_state.png",gg_v1map,width=6.5,height=6.5)
 
 gg_v2map <- ggplot(data = africa) +
   geom_sf(color="gray",fill="white")+
-  geom_point(data=datasub_dt[event==27],aes(x=longitude,y=latitude,size=incidents,color=incidents,alpha=incidents),color="indianred")+
+  geom_point(data=datasub_dt[actor=="rebel"],aes(x=longitude,y=latitude,size=incidents,color=incidents,alpha=incidents),color="seagreen")+
   scale_alpha(range=c(.5,.75))+
   scale_size(range=c(.5,4.5))+
-  labs(title="Violence Against Civilians by Rebel Groups",subtitle="(grid-cells with incidents \u2265 5 over 1997-2020 period)",caption="Data Source: Armed Conflict Location & Event Data \n Project (ACLED); www.acleddata.com")+
+  labs(title="Violence Involving Rebel Groups",subtitle="(grid-cells with incidents \u2265 5 over 1997-2020 period)",caption="Data Source: Armed Conflict Location & Event Data Project (ACLED)\n https://acleddata.com")+
   theme_void()+
   theme(legend.position=c(.15,.4),legend.justification=c(0,1),legend.title=element_blank(),legend.text=element_text(size=14,hjust=1),plot.caption=element_text(color="gray50",face="italic",size=10),plot.title=element_text(size=16))
 
@@ -116,13 +108,12 @@ gg_v2map
 ggsave("map_rebel.png",gg_v2map,width=6.5,height=6.5)
 
 
-
 gg_v3map <- ggplot(data = africa) +
   geom_sf(color="gray",fill="white")+
-  geom_point(data=datasub_dt[event==37],aes(x=longitude,y=latitude,size=incidents,color=incidents,alpha=incidents),color="indianred")+
+  geom_point(data=datasub_dt[actor=="polit"],aes(x=longitude,y=latitude,size=incidents,color=incidents,alpha=incidents),color="indianred")+
   scale_alpha(range=c(.5,.75))+
   scale_size(range=c(.5,4.5))+
-  labs(title="Violence Against Civilians by Political Militia",subtitle="(grid-cells with incidents \u2265 5 over 1997-2020 period)",caption="Data Source: Armed Conflict Location & Event Data \n Project (ACLED); www.acleddata.com")+
+  labs(title="Violence Involving Political Militia",subtitle="(grid-cells with incidents \u2265 5 over 1997-2020 period)",caption="Data Source: Armed Conflict Location & Event Data Project (ACLED)\n https://acleddata.com")+
   theme_void()+
   theme(legend.position=c(.15,.4),legend.justification=c(0,1),legend.title=element_blank(),legend.text=element_text(size=14,hjust=1),plot.caption=element_text(color="gray50",face="italic",size=10),plot.title=element_text(size=16))
 
@@ -131,13 +122,12 @@ gg_v3map
 ggsave("map_political.png",gg_v3map,width=6.5,height=6.5)
 
 
-
 gg_v4map <- ggplot(data = africa) +
   geom_sf(color="gray",fill="white")+
-  geom_point(data=datasub_dt[event==47],aes(x=longitude,y=latitude,size=incidents,color=incidents,alpha=incidents),color="indianred")+
+  geom_point(data=datasub_dt[actor=="ident"],aes(x=longitude,y=latitude,size=incidents,color=incidents,alpha=incidents),color="goldenrod")+
   scale_alpha(range=c(.5,.75))+
   scale_size(range=c(.5,4.5))+
-  labs(title="Violence Against Civilians by Identity Militia",subtitle="(grid-cells with incidents \u2265 5 over 1997-2020 period)",caption="Data Source: Armed Conflict Location & Event Data \n Project (ACLED); www.acleddata.com")+
+  labs(title="Violence Involving Identity Militia",subtitle="(grid-cells with incidents \u2265 5 over 1997-2020 period)",caption="Data Source: Armed Conflict Location & Event Data Project (ACLED)\n https://acleddata.com")+
   theme_void()+
   theme(legend.position=c(.15,.4),legend.justification=c(0,1),legend.title=element_blank(),legend.text=element_text(size=14,hjust=1),plot.caption=element_text(color="gray50",face="italic",size=10),plot.title=element_text(size=16))
 
@@ -145,6 +135,28 @@ gg_v4map
 
 ggsave("map_identity.png",gg_v4map,width=6.5,height=6.5)
 
+
+
+#-- Cropland
+library(viridis)
+library(RColorBrewer)
+
+# harvest months
+datasub_dt <- datacomb_dt[year=="2010" & season==1 & max_area > 0.01]
+datasub_dt$month <- factor(datasub_dt$month,levels=month.abb[1:12])
+
+gg_harvest <- ggplot(data = africa) +
+  geom_sf(color="gray",fill="white")+
+  geom_point(data=datasub_dt,aes(x=longitude,y=latitude,color=month),alpha=.75)+
+  scale_color_discrete(name="area")+
+  # scale_color_viridis(name="area",discrete=T,alpha=.75,option="E")+
+  labs(title="Harvest Months",subtitle="(grid-cells with cropland share \u2265 0.01)",caption="Data Source: Center for Sustainability and the Global Environment \u2013 Nelson Institute\n https://nelson.wisc.edu/sage/data-and-models/crop-calendar-dataset/index.php")+
+  theme_void()+
+  theme(legend.position=c(.15,.52),legend.justification=c(0,1),legend.title=element_blank(),legend.text=element_text(size=14,hjust=0),plot.caption=element_text(color="gray50",face="italic",size=10),plot.title=element_text(size=16))
+
+gg_harvest
+
+ggsave("map_harvest.png",gg_harvest,width=6.5,height=6.5)
 
 
 ## cereal crops
@@ -161,8 +173,8 @@ gg_cereals <- ggplot(data = africa) +
   geom_point(data=datasub_dt,aes(x=longitude,y=latitude,color=crop,size=area,alpha=area))+
   scale_size(range=c(.5,4.5),guide=F)+
   scale_alpha(range=c(.5,.75),guide=F)+
-  scale_color_manual(name="Cereal",values=c("Seagreen","indianred","goldenrod","gray60"))+
-  labs(title="Geographical Distribution of Major Cereal Crops",subtitle="(grid-cells with harvested area \u2265 1%)",caption="Data Source: Center for Sustainability and the Global Environment \n Nelson Institute at University of Wisconsin-Madison \n https://nelson.wisc.edu/sage/data-and-models/crop-calendar-dataset/index.php")+
+  scale_color_manual(name="Cereal",values=c("seagreen","indianred","goldenrod","gray60"))+
+  labs(title="Geographical Distribution of Major Cereal Crops",subtitle="(grid-cells with harvested area \u2265 1%)",caption="Data Source: Center for Sustainability and the Global Environment \u2013 Nelson Institute\n https://nelson.wisc.edu/sage/data-and-models/crop-calendar-dataset/index.php")+
   theme_void()+
   theme(legend.position=c(.15,.4),legend.justification=c(0,1),legend.title=element_blank(),legend.text=element_text(size=14),plot.caption=element_text(color="gray50",face="italic",size=10),plot.title=element_text(size=16))
 
@@ -170,10 +182,8 @@ gg_cereals
 
 ggsave("map_crops.png",gg_cereals,width=6.5,height=6.5)
 
-##---
 
-
-## prices
+#-- Prices
 datasub_dt <- dataset_dt[(longitude==unique(longitude)[1] & latitude==unique(latitude)[1]),.(Maize=price_maize,Sorghum=price_sorghum,Wheat=price_wheat,Rice=price_rice),by=.(date)]
 datasub_dt <- unique(datasub_dt)
 
@@ -191,4 +201,23 @@ gg_prices <- ggplot(prices_dt,aes(x=date,y=price,color=cereal,linetype=cereal,gr
 gg_prices
 
 ggsave("prices.png",gg_prices,width=6.5,height=6.5)
+
+
+### population
+datasub_dt <- datacomb_dt[,.(population=mean(population_mln)),by=.(longitude,latitude)]
+datasub_dt <- datasub_dt[population>=.1]
+
+gg_map <- ggplot(data = africa) +
+  geom_sf(color="gray",fill="white")+
+  geom_point(data=datasub_dt,aes(x=longitude,y=latitude,size=population,alpha=population),color="gray50")+
+  scale_alpha(range=c(.5,.75))+
+  scale_size(range=c(.5,4.5))+
+  labs(title="Population (million)",subtitle="(grid-cells with average population \u2265 100K over 1997-2020 period)",caption="Data Source: NASA SEDAC \u2013 Gridded Population of the World, Version 4 (GPWv4)\n https://sedac.ciesin.columbia.edu")+
+  theme_void()+
+  theme(legend.position=c(.15,.4),legend.justification=c(0,1),legend.title=element_blank(),legend.text=element_text(size=14,hjust=1),plot.caption=element_text(color="gray50",face="italic",size=10),plot.title=element_text(size=16))
+
+gg_map
+
+ggsave("map_population.png",gg_map,width=6.5,height=6.5)
+
 

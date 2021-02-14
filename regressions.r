@@ -13,85 +13,77 @@ gc()
 
 load("dataset.RData")
 
-dataset_dt[season==0]$season <- NA
+## for now, only violence... may use riots later on
+# dataset_dt <- dataset_dt[event=="Violence"]
 
 dataset_dt[,`:=` (population_mln = population/1000000)]
-dataset_dt[,`:=` (population_ihs = log(population_mln+sqrt(population_mln^2+1)))]
 
-dataset_dt[,`:=` (incidents_pop=incidents/population_mln,incidents_dum=ifelse(incidents>0,1,0),fatalities_dum=ifelse(fatalities>0,1,0),agri=ifelse(tot_area>.01,1,0))]
+dataset_dt[,`:=` (incidents_pop=incidents/population_mln,incidents_dum=ifelse(incidents>0,1,0),agri=ifelse(tot_area>.01,1,0),plant_dum=ifelse(plant==1,1,0))]
 
-datasub_dt <- dataset_dt[max_area>0,.(incidents=mean(incidents),area=mean(max_area)),by=.(season,event)]
-datasub_dt <- datasub_dt[order(event,season)]
+## combine all interactions into the events only
+datacomb_dt <- dataset_dt[,.(incidents=sum(incidents),fatalities=sum(fatalities)),by=.(longitude,latitude,mo,xy,date,yearmo,year,month,plant,season_srt,season,season_end,crop,tot_area,max_area,agri,price,price_ch,price_d,cocoa_ch,platinum_ch,cocoa_d,platinum_d,population,population_mln)]
+
+datacomb_dt[,`:=` (incidents_pop=incidents/population_mln,incidents_dum=ifelse(incidents>0,1,0))]
+
+## aggregate by location-year
+aggregate_dt <- datacomb_dt[,.(incidents=sum(incidents),price=mean(price),price_ch=mean(price_ch),max_area=mean(max_area),tot_area=mean(tot_area),population_mln=mean(population_mln)),by=.(xy,year)]
+
+aggregate_dt[,`:=` (incidents_pop=incidents/population_mln,incidents_dum=ifelse(incidents>0,1,0))]
 
 
-datacomb_dt <- dataset_dt[,.(incidents=sum(incidents),fatalities=sum(fatalities)),by=.(longitude,latitude,mo,xy,date,yearmo,year,month,season_srt,season,season_end,crop,tot_area,max_area,agri,price,price_wt,price_ch,price_chwt,cocoa_ch,platinum_ch,population_mln,population_ihs)]
+## baselines annual
+base_vfe <- feols(incidents_pop~price_ch:max_area | xy+year, aggregate_dt,se="cluster",weights=~population_mln)
+summary(base_vfe)
 
-datacomb_dt[,`:=` (incidents_pop=incidents/population_mln)]
 
-## VIOLENCE
+
+## without seasonality
 base_vfe <- feols(incidents~price_ch:max_area | xy+yearmo, datacomb_dt,se="cluster")
 summary(base_vfe)
 
-harv_vfe <- feols(incidents~price_ch:max_area:season | xy+yearmo, datacomb_dt,se="cluster")
-summary(harv_vfe)
-
-base1_vfe <- feols(incidents~price_ch:max_area | xy+yearmo+season, datacomb_dt[latitude<=23.5],se="cluster")
-summary(base1_vfe)
-
-harv1_vfe <- feols(incidents~price_ch:max_area:season | xy+yearmo+season, datacomb_dt[latitude<=23.5],se="cluster")
-summary(harv1_vfe)
-
-base2_vfe <- feols(incidents~price_ch:max_area | xy+yearmo+season, datacomb_dt[population_mln >= 0.05],se="cluster")
-summary(base2_vfe)
-
-harv2_vfe <- feols(incidents~price_ch:max_area:season | xy+yearmo+season, datacomb_dt[population_mln >= 0.05],se="cluster")
-summary(harv2_vfe)
-
-## print the latex table
-etable(base_vfe,harv_vfe,base1_vfe,harv1_vfe,base2_vfe,harv2_vfe,cluster=~xy,tex=TRUE,digits=3,digits.stats = 3,title="Baseline Results",subtitles = c("All","All","Sub","Sub","Pop","Pop"))
-
-
-##--- PER MLN POP ---###
+base_vfe <- feols(incidents_dum~price_ch:max_area | xy+yearmo, datacomb_dt,se="cluster")
+summary(base_vfe)
 
 base_vfe <- feols(incidents_pop~price_ch:max_area | xy+yearmo, datacomb_dt,se="cluster",weights=~population_mln)
 summary(base_vfe)
 
-harv_vfe <- feols(incidents_pop~price_ch:max_area:season | xy+yearmo, datacomb_dt,se="cluster",weights=~population_mln)
-summary(harv_vfe)
 
-base1_vfe <- feols(incidents_pop~price_ch:max_area | xy+yearmo, datacomb_dt[latitude<=23.5],se="cluster",weights=~population_mln)
-summary(base1_vfe)
+## with seasonality
+base_vfe <- feols(incidents~price_ch:agri:i(season,drop=0) | xy+yearmo, datacomb_dt,se="cluster")
+summary(base_vfe)
 
-harv1_vfe <- feols(incidents_pop~price_ch:max_area:season | xy+yearmo, datacomb_dt[latitude<=23.5],se="cluster",weights=~population_mln)
-summary(harv1_vfe)
+base_vfe <- feols(incidents_dum~price_ch:max_area:i(season,drop=0) | xy+yearmo, datacomb_dt,se="cluster")
+summary(base_vfe)
 
-base2_vfe <- feols(incidents_pop~price_ch:max_area | xy+yearmo, datacomb_dt[population_mln >= 0.05],se="cluster",weights=~population_mln)
-summary(base2_vfe)
+base_vfe <- feols(incidents_pop~price_ch:max_area:i(season,drop=0) | xy+yearmo, datacomb_dt,se="cluster",weights=~population_mln)
+summary(base_vfe)
 
-harv2_vfe <- feols(incidents_pop~price_ch:max_area:season | xy+yearmo, datacomb_dt[population_mln >= 0.05],se="cluster",weights=~population_mln)
-summary(harv2_vfe)
 
-## print the latex table
-etable(base_vfe,harv_vfe,base1_vfe,harv1_vfe,base2_vfe,harv2_vfe,cluster=~xy,tex=TRUE,digits=3,digits.stats = 3,title="Baseline Results",subtitles = c("All","All","Sub","Sub","Pop","Pop"))
+# base_vfe <- feols(incidents_pop~max_area:i(year,drop=2010) | xy+yearmo, datacomb_dt[season==8],se="cluster",weights=~population_mln)
+# summary(base_vfe)
 
-##---             ---###
+
+
+# ## print the latex table
+# etable(base_vfe,harv_vfe,base1_vfe,harv1_vfe,base2_vfe,harv2_vfe,cluster=~xy,tex=TRUE,digits=3,digits.stats = 3,title="Baseline Results",subtitles = c("All","All","Sub","Sub","Pop","Pop"))
+
 
 
 ##--- DISAGGREGATED ---###
 
-harv1_vfe <- feols(incidents_pop~price_ch:max_area:season | xy+yearmo, dataset_dt[event==17],se="cluster",weights=~population_mln)
+harv1_vfe <- feols(incidents_pop~price_ch:max_area:(i(season,drop=0)) | xy+yearmo, dataset_dt[actor=="state"],se="cluster",weights=~population_mln)
 summary(harv1_vfe)
 
-harv2_vfe <- feols(incidents_pop~price_ch:max_area:season | xy+yearmo, dataset_dt[event==27],se="cluster",weights=~population_mln)
+harv2_vfe <- feols(incidents_pop~price_ch:max_area:(i(season,drop=0)) | xy+yearmo, dataset_dt[actor=="rebel"],se="cluster",weights=~population_mln)
 summary(harv2_vfe)
 
-harv3_vfe <- feols(incidents_pop~price_ch:max_area:season | xy+yearmo, dataset_dt[event==37],se="cluster",weights=~population_mln)
+harv3_vfe <- feols(incidents_pop~price_ch:max_area:(i(season,drop=0)) | xy+yearmo, dataset_dt[actor=="polit"],se="cluster",weights=~population_mln)
 summary(harv3_vfe)
 
-harv4_vfe <- feols(incidents_pop~price_ch:max_area:season | xy+yearmo, dataset_dt[event==47],se="cluster",weights=~population_mln)
+harv4_vfe <- feols(incidents_pop~price_ch:max_area:(i(season,drop=0)) | xy+yearmo, dataset_dt[actor=="ident"],se="cluster",weights=~population_mln)
 summary(harv4_vfe)
 
-harv5_vfe <- feols(incidents_pop~price_ch:max_area:season | xy+yearmo, dataset_dt[event==78],se="cluster",weights=~population_mln)
+harv5_vfe <- feols(incidents_pop~price_ch:max_area:(i(season,drop=0)) | xy+yearmo, dataset_dt[actor=="other"],se="cluster",weights=~population_mln)
 summary(harv5_vfe)
 
 ## print the latex table
