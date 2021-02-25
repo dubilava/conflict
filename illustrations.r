@@ -24,38 +24,84 @@ load("dataset.RData")
 dataset_dt[,`:=` (population_mln = population/1000000)]
 dataset_dt[,`:=` (incidents_pop=incidents/population_mln,incidents_dum=ifelse(incidents>0,1,0))]
 
-datacomb_dt <- dataset_dt[,.(incidents=sum(incidents),fatalities=sum(fatalities)),by=.(longitude,latitude,year,xy,date,yearmo,mo,month,crop,tot_area,max_area,plant,season_srt,season,season_end,price,price_ch,price_d,price_maize,price_sorghum,price_wheat,price_rice,price_cocoa,price_platinum,cocoa_ch,platinum_ch,cocoa_d,platinum_d,population,population_mln)]
+datacomb_dt <- dataset_dt[,.(incidents=sum(incidents),fatalities=sum(fatalities)),by=.(xy,longitude,latitude,country,year,date,yearmo,mo,month,crop,tot_area,max_area,plant,season_srt,season,season_end,price,price_ch,price_d,price_maize,price_sorghum,price_wheat,price_rice,price_cocoa,cocoa_ch,cocoa_d,population,population_mln)]
 datacomb_dt[,`:=` (incidents_pop=incidents/population_mln,incidents_dum=ifelse(incidents>0,1,0))]
 
-aggregate_dt <- datacomb_dt[,.(incidents=sum(incidents),price=mean(price),price_ch=mean(price_ch),max_area=mean(max_area),tot_area=mean(tot_area),population=mean(population),population_mln=mean(population_mln)),by=.(xy,year)]
+xysum_dt <- dataset_dt[,.(incidents=sum(incidents),incidents_dum=mean(incidents_dum),price_sd=sd(price_ch),max_area=mean(max_area),tot_area=mean(tot_area),population=mean(population),population_mln=mean(population_mln)),by=.(event,xy,longitude,latitude,country)]
+
+xycomb_dt <- datacomb_dt[,.(incidents=sum(incidents),incidents_dum=mean(incidents_dum),price_sd=sd(price_ch),max_area=mean(max_area),tot_area=mean(tot_area),population=mean(population),population_mln=mean(population_mln)),by=.(xy,longitude,latitude,country)]
+xycomb_dt <- xycomb_dt[incidents>0]
+cycomb_dt <- xycomb_dt[,.(xy=.N,incidents_sum=sum(incidents)),by=.(country)]
+
+# xysum_dt <- merge(xysum_dt,xycomb_dt[,.(xy)],by="xy")
+
+country_dt <- xysum_dt[,.(incidents=sum(incidents)),by=.(event,country)]
+country_dt <- country_dt[order(country,event)]
+
+country_dt <- merge(country_dt,cycomb_dt,by="country")
+country_dt$countrylab <- paste0(country_dt$country," (",country_dt$xy,")")
+
+country_dt <- country_dt[order(-incidents_sum,event)]
+
+country_dt$country <- factor(country_dt$country,levels=unique(country_dt$country))
+
+gg_conflict <- ggplot(country_dt,aes(x=reorder(countrylab,incidents),y=incidents,fill=event,group=event))+
+  geom_bar(stat="identity",alpha=.75)+
+  coord_flip()+
+  scale_fill_manual(values=c("Riots"="steelblue","Violence"="indianred"))+
+  labs(title="Country Ranking by Conflict Incidence",subtitle="(total number over 1997-2020 period)",x="Countries",y="Incidents",caption="Data Source: Armed Conflict Location & Event Data Project (ACLED)\n https://acleddata.com")+
+  theme_classic()+
+  theme(legend.position=c(.65,.4),legend.justification=c(0,1),legend.title=element_blank(),legend.text=element_text(size=14),plot.caption=element_text(color="gray50",face="italic",size=10),plot.title=element_text(size=16),axis.line.y=element_blank(),axis.ticks.y=element_blank())
+
+gg_conflict
+
+ggsave("conflict.png",gg_conflict,width=6.5,height=7.5)
+
+xymean_dt <- datacomb_dt[,.(incidents=mean(incidents),incidents_dum=mean(incidents_dum),incidents_pop=mean(incidents_pop),price=mean(price),price_ch=mean(price_ch),max_area=mean(max_area),tot_area=mean(tot_area),population=mean(population),population_mln=mean(population_mln)),by=.(xy,longitude,latitude,country)]
+
+aggregate_dt <- datacomb_dt[,.(incidents=sum(incidents),price=mean(price),price_ch=mean(price_ch),max_area=mean(max_area),tot_area=mean(tot_area),population=mean(population),population_mln=mean(population_mln)),by=.(xy,longitude,latitude,country,year)]
 
 aggregate_dt[,`:=` (incidents_pop=incidents/population_mln,incidents_dum=ifelse(incidents>0,1,0))]
 
-superaggregate_dt <- aggregate_dt[,.(incident_year=sum(incidents_dum),crop_area=mean(tot_area),population_mean=mean(population)),by=.(xy)]
+xyaggregate_dt <- aggregate_dt[,.(incident_year=sum(incidents_dum),crop_area=mean(tot_area),population_mean=mean(population)),by=.(xy)]
 
-gg_scatter <- ggplot(superaggregate_dt,aes(x=log(population_mean),y=crop_area))+
-  geom_point(color="steelblue",alpha=.5)+
-  labs(title="Population and Crop Production",subtitle="(all grid-cells)",x="Population (log-scale)",y="Cropland Share",caption="Data Sources: Center for Sustainability and the Global Environment \u2013 Nelson Institute;\n NASA SEDAC \u2013 Gridded Population of the World, Version 4 (GPWv4)")+
-  theme_classic()+
-  theme(legend.position=c(.15,.52),legend.justification=c(0,1),legend.title=element_blank(),legend.text=element_text(size=14,hjust=0),plot.caption=element_text(color="gray50",face="italic",size=10),plot.title=element_text(size=16))
+countryaggregate_dt <- aggregate_dt[,.(incidents=sum(incidents)),by=.(country)]
 
-ggsave("scatter_pop_crop.png",gg_scatter,width=6.5,height=4.5)
+aggregate_dt[,`:=` (agri=ifelse(max_area>.01,1,0))]
+
+yearaggregate_dt <- aggregate_dt[,.(incidents_pop=mean(incidents_pop)),by=.(year,agri)]
+
+ggplot(xymean_dt,aes(x=incidents,y=incidents_dum))+
+  geom_point()
+
+# gg_scatter <- ggplot(superaggregate_dt,aes(x=crop_area,y=incident_year))+
+#   geom_point(color="steelblue",alpha=.5)+
+#   labs(title="Population and Crop Production",subtitle="(all grid-cells)",x="Population (log-scale)",y="Cropland Share",caption="Data Sources: Center for Sustainability and the Global Environment \u2013 Nelson Institute;\n NASA SEDAC \u2013 Gridded Population of the World, Version 4 (GPWv4)")+
+#   theme_classic()+
+#   theme(legend.position=c(.15,.52),legend.justification=c(0,1),legend.title=element_blank(),legend.text=element_text(size=14,hjust=0),plot.caption=element_text(color="gray50",face="italic",size=10),plot.title=element_text(size=16))
+# 
+# ggsave("scatter_pop_crop.png",gg_scatter,width=6.5,height=4.5)
 
 
-datacomb_dt <- merge(datacomb_dt,superaggregate_dt,by=c("xy"),all.x=T)
+datacomb_dt <- merge(datacomb_dt,xyaggregate_dt,by=c("xy"),all.x=T)
 
 
-## some descriptive stuff
+### TABLES
 
+descriptive1_dt <- datacomb_dt[,.(incidents=mean(incidents),sd=sd(incidents),incidents_pop=mean(incidents_pop),pop_sd=sd(incidents_pop),incidents_dum=mean(incidents_dum),dum_sd=sd(incidents_dum))]
+descriptive2_dt <- datacomb_dt[incident_year>0,.(incidents=mean(incidents),sd=sd(incidents),incidents_pop=mean(incidents_pop),pop_sd=sd(incidents_pop),incidents_dum=mean(incidents_dum),dum_sd=sd(incidents_dum))]
+descriptive3_dt <- datacomb_dt[tot_area>0,.(incidents=mean(incidents),sd=sd(incidents),incidents_pop=mean(incidents_pop),pop_sd=sd(incidents_pop),incidents_dum=mean(incidents_dum),dum_sd=sd(incidents_dum))]
+descriptive4_dt <- datacomb_dt[tot_area>0 & incident_year>0,.(incidents=mean(incidents),sd=sd(incidents),incidents_pop=mean(incidents_pop),pop_sd=sd(incidents_pop),incidents_dum=mean(incidents_dum),dum_sd=sd(incidents_dum))]
+descriptive5_dt <- datacomb_dt[population_mln>0.1,.(incidents=mean(incidents),sd=sd(incidents),incidents_pop=mean(incidents_pop),pop_sd=sd(incidents_pop),incidents_dum=mean(incidents_dum),dum_sd=sd(incidents_dum))]
+descriptive6_dt <- datacomb_dt[population_mln>0.1 & incident_year>0,.(incidents=mean(incidents),sd=sd(incidents),incidents_pop=mean(incidents_pop),pop_sd=sd(incidents_pop),incidents_dum=mean(incidents_dum),dum_sd=sd(incidents_dum))]
 
+descriptive7_dt <- datacomb_dt[price_ch>0,.(incidents=mean(incidents),sd=sd(incidents),incidents_pop=mean(incidents_pop),pop_sd=sd(incidents_pop),incidents_dum=mean(incidents_dum),dum_sd=sd(incidents_dum))]
+descriptive8_dt <- datacomb_dt[price_ch<=0,.(incidents=mean(incidents),sd=sd(incidents),incidents_pop=mean(incidents_pop),pop_sd=sd(incidents_pop),incidents_dum=mean(incidents_dum),dum_sd=sd(incidents_dum))]
 
-descriptive1_dt <- datacomb_dt[,.(incidents_rate=mean(incidents_dum),rate_sd=sd(incidents_dum),incidents_mean=mean(incidents_pop),mean_sd=sd(incidents_pop))]
-descriptive2_dt <- datacomb_dt[incident_year>0,.(incidents_rate=mean(incidents_dum),rate_sd=sd(incidents_dum),incidents_mean=mean(incidents_pop),mean_sd=sd(incidents_pop))]
-descriptive3_dt <- datacomb_dt[tot_area>0,.(incidents_rate=mean(incidents_dum),rate_sd=sd(incidents_dum),incidents_mean=mean(incidents_pop),mean_sd=sd(incidents_pop))]
-descriptive4_dt <- datacomb_dt[tot_area>0 & incident_year>0,.(incidents_rate=mean(incidents_dum),rate_sd=sd(incidents_dum),incidents_mean=mean(incidents_pop),mean_sd=sd(incidents_pop))]
-descriptive5_dt <- datacomb_dt[population_mln>0.1,.(incidents_rate=mean(incidents_dum),rate_sd=sd(incidents_dum),incidents_mean=mean(incidents_pop),mean_sd=sd(incidents_pop))]
-descriptive6_dt <- datacomb_dt[population_mln>0.1 & incident_year>0,.(incidents_rate=mean(incidents_dum),rate_sd=sd(incidents_dum),incidents_mean=mean(incidents_pop),mean_sd=sd(incidents_pop))]
-
+descriptive11_dt <- datacomb_dt[population_mln>0.1 & price_ch>0 & tot_area>0,.(incidents=mean(incidents),sd=sd(incidents),incidents_pop=mean(incidents_pop),pop_sd=sd(incidents_pop),incidents_dum=mean(incidents_dum),dum_sd=sd(incidents_dum))]
+descriptive01_dt <- datacomb_dt[population_mln>0.1 & price_ch<=0 & tot_area>0,.(incidents=mean(incidents),sd=sd(incidents),incidents_pop=mean(incidents_pop),pop_sd=sd(incidents_pop),incidents_dum=mean(incidents_dum),dum_sd=sd(incidents_dum))]
+descriptive10_dt <- datacomb_dt[population_mln>0.1 & price_ch>0 & tot_area==0,.(incidents=mean(incidents),sd=sd(incidents),incidents_pop=mean(incidents_pop),pop_sd=sd(incidents_pop),incidents_dum=mean(incidents_dum),dum_sd=sd(incidents_dum))]
+descriptive00_dt <- datacomb_dt[population_mln>0.1 & price_ch<=0 & tot_area==0,.(incidents=mean(incidents),sd=sd(incidents),incidents_pop=mean(incidents_pop),pop_sd=sd(incidents_pop),incidents_dum=mean(incidents_dum),dum_sd=sd(incidents_dum))]
 
 
 ### FIGURES
