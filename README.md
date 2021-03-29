@@ -10,8 +10,9 @@ This repository hosts the data and R codes for the paper "Commodity Price Shocks
 
 ## R Codes
 
+- regressions.r replicates the main results of the study
+- illustrations.r generates the figures of the main text as well as some of the figures of the appendix
+- robustness.r replicates some of the robustness checls of the study
+- sensitivity.r generates two figures that address the sensitivity of the main results to omitting a year or a lattitude from the data
+- falsification.r generates the figure that displays parameter estimates from a simulation exerise that randomizes the harvest seasons across the locations
 
-### Main
-
-
-### Auxillary
