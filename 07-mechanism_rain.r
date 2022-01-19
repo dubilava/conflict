@@ -11,6 +11,49 @@ gc()
 
 "%!in%" <- Negate("%in%")
 
+theme_black <- function(){
+  theme(
+    panel.background=element_rect(fill="transparent",color=NA),
+    panel.grid=element_blank(),
+    plot.background=element_rect(fill="transparent",color=NA),
+    legend.background=element_rect(fill="transparent",color=NA),
+    plot.title=element_text(size=12,colour="gray55",family="sans"),
+    axis.title=element_text(size=10,colour="gray55",family="sans"),
+    axis.text=element_text(size=8,colour="gray55",family="sans",margin=margin(t=1,r=1,b=1,l=1)),
+    axis.line.x=element_line(colour="gray55"),
+    axis.line.y=element_line(colour="gray55"),
+    axis.ticks=element_line(colour="gray55"),
+    legend.position="none",
+    legend.title=element_blank(),
+    legend.text=element_text(size=10,colour="gray55",family="sans"),
+    legend.key.size=unit(.75,'lines'),
+    strip.background=element_blank(),
+    strip.text=element_text(size=10,colour="gray55",family="sans",face="bold",margin=margin(.1,0,.1,0,"cm"))
+  )
+}
+
+theme_white <- function(){
+  theme(
+    panel.background=element_rect(fill="transparent",color=NA),
+    panel.grid=element_blank(),
+    plot.background=element_rect(fill="transparent",color=NA),
+    legend.background=element_rect(fill="transparent",color=NA),
+    plot.title=element_text(size=12,colour="gray35",family="sans"),
+    axis.title=element_text(size=10,colour="gray35",family="sans"),
+    axis.text=element_text(size=8,colour="gray35",family="sans",margin=margin(t=1,r=1,b=1,l=1)),
+    axis.line.x=element_line(colour="gray35"),
+    axis.line.y=element_line(colour="gray35"),
+    axis.ticks=element_line(colour="gray35"),
+    legend.position="none",
+    legend.title=element_blank(),
+    legend.text=element_text(size=10,colour="gray35",family="sans"),
+    legend.key.size=unit(.75,'lines'),
+    strip.background=element_blank(),
+    strip.text=element_text(size=10,colour="gray35",family="sans",face="bold",margin=margin(.1,0,.1,0,"cm"))
+  )
+}
+
+
 ## load the data
 load("data_violence_acled.RData")
 load("precipitation.RData")
@@ -131,20 +174,75 @@ coeftab_dt$season <- as.numeric(as.character(coeftab_dt$season))
 
 
 ## circular plot for illustrating the seasonal effect
-gg_coef <- ggplot(coeftab_dt,aes(x=season,y=est))+
+gg_coef_white <- ggplot(coeftab_dt,aes(x=season,y=est))+
   geom_ribbon(aes(ymin=est-1.96*se,ymax=est+1.96*se,fill=regime,alpha=regime))+
   geom_line(aes(color=regime),size=.6)+
-  geom_hline(yintercept = seq(-16,16,4),color="gray50",size=.3,linetype=3) +
+  geom_hline(yintercept = seq(-16,16,4),color="gray55",size=.3,linetype=3) +
   geom_hline(yintercept = 0,color="gray30",size=.4,linetype=2) +
-  scale_x_continuous(breaks = 0:11,labels=c(0:11))+
+  scale_x_continuous(breaks = 0:11,labels=c("H(arvest)",paste0("H+",c(1:11))))+
   scale_y_continuous(breaks = seq(-8,8,4))+
   scale_color_manual(values=c("darkgray","steelblue"))+
   scale_fill_manual(values=c("darkgray","steelblue"))+
   scale_alpha_manual(values=c(.4,.2))+
+  labs(x="months after harvest (H)",y="% change in violence by political militias")+
   facet_wrap(~regime)+
   coord_polar(start=-pi*2)+
-  labs(x="Months after harvest",y="Percent change in violence")+
-  theme(axis.text=element_text(size=8,margin=margin(t=1,r=1,b=1,l=1),color="black"),axis.title = element_text(size=10),plot.title = element_text(size=12),panel.grid=element_blank(),panel.background = element_blank(),legend.position = "none",strip.background = element_blank())
+  theme_white()+
+  theme(axis.line.x=element_blank(),axis.line.y=element_blank())
 
-ggsave("Figures/circular_violence_rain.png",gg_coef,width=6.5,height=3.5,dpi="retina")
+gg_coef_black <- ggplot(coeftab_dt,aes(x=season,y=est))+
+  geom_ribbon(aes(ymin=est-1.96*se,ymax=est+1.96*se,fill=regime,alpha=regime))+
+  geom_line(aes(color=regime),size=.6)+
+  geom_hline(yintercept = seq(-16,16,4),color="gray55",size=.3,linetype=3) +
+  geom_hline(yintercept = 0,color="gray30",size=.4,linetype=2) +
+  scale_x_continuous(breaks = 0:11,labels=c("H(arvest)",paste0("H+",c(1:11))))+
+  scale_y_continuous(breaks = seq(-8,8,4))+
+  scale_color_manual(values=c("darkgray","steelblue"))+
+  scale_fill_manual(values=c("darkgray","steelblue"))+
+  scale_alpha_manual(values=c(.4,.2))+
+  labs(x="months after harvest (H)",y="% change in violence by political militias")+
+  facet_wrap(~regime)+
+  coord_polar(start=-pi*2)+
+  theme_black()+
+  theme(axis.line.x=element_blank(),axis.line.y=element_blank())
+
+ggsave("Presentation/circular_violence_rain.png",gg_coef_white,width=6.5,height=3.5,dpi="retina")
+ggsave("Online/circular_violence_rain.png",gg_coef_black,width=6.5,height=3.5,dpi="retina")
+
+
+coefcomb_dt <- coeftab_dt[season!=12]
+coefcomb_dt[,`:=`(est_cum=cumsum(est)),by=.(regime)]
+
+## plot the the seasonal and non-seasonal cumulative impacts together 
+gg_cum_white <- ggplot(coefcomb_dt,aes(x=season,y=est_cum,color=regime,linetype=regime))+
+  geom_line(size=.6)+
+  scale_x_continuous(breaks = 0:11,labels=c("H(arvest)",paste0("H+",c(1:11))))+
+  scale_y_continuous(breaks = seq(0,24,4))+
+  scale_color_manual(values=c("darkgray","steelblue"))+
+  scale_linetype_manual(values=c(1,5))+
+  coord_cartesian(ylim=c(0,24))+
+  labs(x="months after harvest (H)",y="cumulative % change in violence")+
+  theme_classic()+
+  theme_white()+
+  theme(legend.position="top")
+
+gg_cum_black <- ggplot(coefcomb_dt,aes(x=season,y=est_cum,color=regime,linetype=regime))+
+  geom_line(size=.6)+
+  scale_x_continuous(breaks = 0:11,labels=c("H(arvest)",paste0("H+",c(1:11))))+
+  scale_y_continuous(breaks = seq(0,24,4))+
+  scale_color_manual(values=c("darkgray","steelblue"))+
+  scale_linetype_manual(values=c(1,5))+
+  coord_cartesian(ylim=c(0,24))+
+  labs(x="months after harvest (H)",y="cumulative % change in violence")+
+  theme_classic()+
+  theme_black()+
+  theme(legend.position="top")
+
+ggsave("Presentation/cumulative_violence_rain.png",gg_cum_white,width=6.5,height=3.5,dpi="retina")
+ggsave("Online/cumulative_violence_rain.png",gg_cum_black,width=6.5,height=3.5,dpi="retina")
+
+
+gg_circular_cumulative_rain_white <- plot_grid(gg_coef_white,gg_cum_white,ncol=1,align="v",axis="b",rel_heights = c(4,3))
+
+ggsave("Figures/circular_cumulative_violence_rain.png",gg_circular_cumulative_rain_white,width=6.5,height=6.5,dpi="retina")
 

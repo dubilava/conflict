@@ -98,21 +98,83 @@ coeftab_dt <- coeftab_dt[order(source,season)]
 
 coeftab_dt$season <- as.numeric(as.character(coeftab_dt$season))
 
+
+
+theme_black <- function(){
+  theme(
+    panel.background=element_rect(fill="transparent",color=NA),
+    panel.grid=element_blank(),
+    plot.background=element_rect(fill="transparent",color=NA),
+    legend.background=element_rect(fill="transparent",color=NA),
+    plot.title=element_text(size=12,colour="gray55",family="sans"),
+    axis.title=element_text(size=10,colour="gray55",family="sans"),
+    axis.text=element_text(size=8,colour="gray55",family="sans",margin=margin(t=1,r=1,b=1,l=1)),
+    axis.line.x=element_line(colour="gray55"),
+    axis.line.y=element_line(colour="gray55"),
+    axis.ticks=element_line(colour="gray55"),
+    legend.position="none",
+    legend.title=element_blank(),
+    legend.text=element_text(size=10,colour="gray55",family="sans"),
+    legend.key.size=unit(.75,'lines'),
+    strip.background=element_blank(),
+    strip.text=element_text(size=10,colour="gray55",family="sans",face="bold",margin=margin(.1,0,.1,0,"cm"))
+  )
+}
+
+theme_white <- function(){
+  theme(
+    panel.background=element_rect(fill="transparent",color=NA),
+    panel.grid=element_blank(),
+    plot.background=element_rect(fill="transparent",color=NA),
+    legend.background=element_rect(fill="transparent",color=NA),
+    plot.title=element_text(size=12,colour="gray35",family="sans"),
+    axis.title=element_text(size=10,colour="gray35",family="sans"),
+    axis.text=element_text(size=8,colour="gray35",family="sans",margin=margin(t=1,r=1,b=1,l=1)),
+    axis.line.x=element_line(colour="gray35"),
+    axis.line.y=element_line(colour="gray35"),
+    axis.ticks=element_line(colour="gray35"),
+    legend.position="none",
+    legend.title=element_blank(),
+    legend.text=element_text(size=10,colour="gray35",family="sans"),
+    legend.key.size=unit(.75,'lines'),
+    strip.background=element_blank(),
+    strip.text=element_text(size=10,colour="gray35",family="sans",face="bold",margin=margin(.1,0,.1,0,"cm"))
+  )
+}
+
 ## circular plot for illustrating the seasonal effect
-gg_coef <- ggplot(coeftab_dt,aes(x=season,y=est))+
+gg_coef_white <- ggplot(coeftab_dt,aes(x=season,y=est))+
   geom_ribbon(aes(ymin=est-1.96*se,ymax=est+1.96*se,fill=source),alpha=.25)+
   geom_line(aes(color=source),size=.6)+
-  geom_hline(yintercept = seq(-16,12,4),color="gray50",size=.3,linetype=3) +
-  geom_hline(yintercept = 0,color="gray30",size=.4,linetype=2) +
-  scale_x_continuous(breaks = 0:11,labels=c(0:11))+
+  geom_hline(yintercept = seq(-16,12,4),color="gray55",size=.3,linetype=3) +
+  geom_hline(yintercept = 0,color="gray35",size=.4,linetype=2) +
+  scale_x_continuous(breaks = 0:11,labels=c("H(arvest)",paste0("H+",c(1:11))))+
   scale_y_continuous(breaks = seq(-8,8,4))+
   scale_color_manual(values=c("indianred","darkgray"))+
   scale_fill_manual(values=c("indianred","darkgray"))+
   facet_wrap(~source)+
   coord_polar(start=-pi*2)+
-  labs(x="Months after harvest",y="Percent change in violence")+
-  theme(axis.text=element_text(size=8,margin=margin(t=1,r=1,b=1,l=1),color="black"),axis.title = element_text(size=10),plot.title = element_text(size=12),panel.grid=element_blank(),panel.background = element_blank(),legend.position = "none",strip.background = element_blank())
+  labs(x="months after harvest (H)",y="% change in violence")+
+  theme_white()+
+  theme(axis.line.x=element_blank(),axis.line.y=element_blank())
+
+gg_coef_black <- ggplot(coeftab_dt,aes(x=season,y=est))+
+  geom_ribbon(aes(ymin=est-1.96*se,ymax=est+1.96*se,fill=source),alpha=.25)+
+  geom_line(aes(color=source),size=.6)+
+  geom_hline(yintercept = seq(-16,12,4),color="gray55",size=.3,linetype=3) +
+  geom_hline(yintercept = 0,color="gray55",size=.4,linetype=2) +
+  scale_x_continuous(breaks = 0:11,labels=c("H(arvest)",paste0("H+",c(1:11))))+
+  scale_y_continuous(breaks = seq(-8,8,4))+
+  scale_color_manual(values=c("indianred","darkgray"))+
+  scale_fill_manual(values=c("indianred","darkgray"))+
+  facet_wrap(~source)+
+  coord_polar(start=-pi*2)+
+  labs(x="months after harvest (H)",y="% change in violence")+
+  theme_black()+
+  theme(axis.line.x=element_blank(),axis.line.y=element_blank())
 
 ## saving the plot
-ggsave("Figures/circular_acled_ucdp.png",gg_coef,width=6.5,height=3.5,device="png",dpi="retina")
+ggsave("Figures/circular_acled_ucdp.png",gg_coef_white,width=6.5,height=3.5,device="png",dpi="retina")
+ggsave("Presentation/circular_acled_ucdp.png",gg_coef_white,width=6.5,height=3.5,device="png",dpi="retina")
+ggsave("Online/circular_acled_ucdp.png",gg_coef_black,width=6.5,height=3.5,device="png",dpi="retina")
 
