@@ -80,7 +80,8 @@ gg_cropland_black <- ggplot(xycomb_dt[max_area>0],aes(x=max_area))+
   scale_fill_manual(name="Cereal",values=c("forestgreen","indianred","steelblue","goldenrod"))+
   labs(x="cropland area fraction",y="grid cells")+
   theme_classic()+
-  theme_black()
+  theme_black()+
+  theme(legend.position=c(.82,.82))
 
 gg_cropland_white <- ggplot(xycomb_dt[max_area>0],aes(x=max_area))+
   geom_bar(aes(fill=crop),position=position_dodge(),color="gray65",alpha=.9,size=.25) +
@@ -88,7 +89,8 @@ gg_cropland_white <- ggplot(xycomb_dt[max_area>0],aes(x=max_area))+
   scale_fill_manual(name="Cereal",values=c("forestgreen","indianred","steelblue","goldenrod"))+
   labs(x="cropland area fraction",y="grid cells")+
   theme_classic()+
-  theme_white()
+  theme_white()+
+  theme(legend.position=c(.82,.82))
 
 ggsave("Figures/cropland_distribution.png",gg_cropland_white,width=6.5,height=3.5,dpi="retina")
 ggsave("Presentation/cropland_distribution.png",gg_cropland_white,width=6.5,height=3.5,dpi="retina")

@@ -275,6 +275,7 @@ gg_coef_white <- ggplot(coeftab_dt[actor %in% c("State forces","Rebel groups")],
   scale_fill_manual(values=c("darkgray","indianred"))+
   facet_wrap(~actor)+
   coord_polar(start=-pi*2)+
+  labs(x="months after harvest (H)",y="% change in violence")+
   theme_white()+
   theme(axis.line.x=element_blank(),axis.line.y=element_blank())
 
@@ -289,6 +290,7 @@ gg_coef_black <- ggplot(coeftab_dt[actor %in% c("State forces","Rebel groups")],
   scale_fill_manual(values=c("darkgray","indianred"))+
   facet_wrap(~actor)+
   coord_polar(start=-pi*2)+
+  labs(x="months after harvest (H)",y="% change in violence")+
   theme_black()+
   theme(axis.line.x=element_blank(),axis.line.y=element_blank())
 
