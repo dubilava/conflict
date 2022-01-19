@@ -1,15 +1,0 @@
-The paper investigates the relationship between international cereal prices and conflict, exploiting geographical variation at the one-degree level in cereal crop production. The author(s) exploit(s) locally defined harvest seasons to shed light on the seasonality of conflict. The main contribution is to shed light on the seasonal pattern of conflict. 
-
-That is an interesting piece of work. Although I have some suggestions to better correct for time and spatial dependency, the analysis seems to be well executed. My main concern relates to the limited nature of the contribution compared to previous studies such as Harari and La Ferrara (2018) and McGuirk and Burke (2020).
-
-Comments
-1)	Contribution. Seasonality is stressed in the submitted manuscript but that dimension was largely taken into account in previous studies such as Harari and La Ferrara (2018) and McGuirk and Burke (2020). This last paper is described in page 3 but it is not clear (to me) what the added value of the submitted manuscript compared to that paper.
-
-2)	I have a few comments on the empirical strategy.
--	I may have missed something but I do not see why the variable shock is not introduced alone. To see whether the effect is stronger in harvest or post-harvest periods, I feel I need to compare the effect of the variable “Shock” in pre-harvest period?
--	It seems to me that the way the Shock variable is defined will imply a lot of time dependency. That might be an issue since conflict might be dynamically determined. I was surprised not to see any dynamic model discussed or at least, assess the sensitivity of the results to the addition of (subnational) specific time trends.
--	I found the threshold used to classify an area as cropland (>0.01), extremely small. Even the threshold of 0.02 used as a robustness check is very small. How much your results depend on that thresholds. Can you discuss the distribution in the share of harvested area in the grid cell? 
--	Why not to make Placebo test by interacting cereal prices with other types of land?
--	Standard errors are clustered at the grid cell level. But simply looking at Figure 2 and given the use of climatic data, standard errors are likely to be spatially correlated. Conley standard errors are recommended. 
--	It was not clear to me why the threshold of 34 degree celcius was chosen to define weather adversity?
-
