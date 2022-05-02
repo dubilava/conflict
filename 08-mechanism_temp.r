@@ -219,6 +219,7 @@ gg_coef_black <- ggplot(coeftab_dt,aes(x=season,y=est))+
   theme_black()+
   theme(axis.line.x=element_blank(),axis.line.y=element_blank())
 
+ggsave("Figures/circular_violence_temp.png",gg_coef_white,width=6.5,height=3.5,dpi=200)
 ggsave("Presentation/circular_violence_temp.png",gg_coef_white,width=6.5,height=3.5,dpi="retina")
 ggsave("Online/circular_violence_temp.png",gg_coef_black,width=6.5,height=3.5,dpi="retina")
 
@@ -257,5 +258,5 @@ ggsave("Online/cumulative_violence_temp.png",gg_cum_black,width=6.5,height=3.5,d
 
 gg_circular_cumulative_rain_white <- plot_grid(gg_coef_white,gg_cum_white,ncol=1,align="v",axis="b",rel_heights = c(4,3))
 
-ggsave("Figures/circular_cumulative_violence_temp.png",gg_circular_cumulative_rain_white,width=6.5,height=6.5,dpi="retina")
+ggsave("Figures/circular_cumulative_violence_temp.png",gg_circular_cumulative_rain_white,width=6.5,height=6.5,dpi=200)
 

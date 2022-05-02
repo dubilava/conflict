@@ -174,7 +174,7 @@ gg_coef_black <- ggplot(coeftab_dt,aes(x=season,y=est))+
   theme(axis.line.x=element_blank(),axis.line.y=element_blank())
 
 ## saving the plot
-ggsave("Figures/circular_acled_ucdp.png",gg_coef_white,width=6.5,height=3.5,device="png",dpi="retina")
+ggsave("Figures/circular_acled_ucdp.png",gg_coef_white,width=6.5,height=3.5,device="png",dpi=200)
 ggsave("Presentation/circular_acled_ucdp.png",gg_coef_white,width=6.5,height=3.5,device="png",dpi="retina")
 ggsave("Online/circular_acled_ucdp.png",gg_coef_black,width=6.5,height=3.5,device="png",dpi="retina")
 

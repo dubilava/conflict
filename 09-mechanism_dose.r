@@ -143,7 +143,7 @@ gg_coef <- ggplot(coeftab3_dt,aes(x=season,y=est))+
   theme_white()+
   theme(axis.line.x=element_blank(),axis.line.y=element_blank())
 
-ggsave("Figures/circular_violence_polit_dose.png",gg_coef,width=6.5,height=6.5,dpi="retina")
+ggsave("Figures/circular_violence_polit_dose.png",gg_coef,width=6.5,height=6.5,dpi=200)
 
 ## circular plot for illustrating the seasonal effect
 gg_coef_white <- ggplot(coeftab3_dt[dose %in% unique(coeftab3_dt$dose)[1:2]],aes(x=season,y=est))+

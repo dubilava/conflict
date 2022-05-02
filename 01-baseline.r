@@ -183,7 +183,8 @@ gg_cum_white <- ggplot(coefcomb_lg,aes(x=season,y=value,color=variable,linetype=
   scale_linetype_manual(values=c(1,5))+
   labs(x="months after harvest (H)",y="cumulative % change in violence")+
   theme_classic()+
-  theme_white()
+  theme_white()+
+  theme(legend.position = c(.85,.15),legend.key.width = unit(1,"cm"))
 
 gg_cum_black <- ggplot(coefcomb_lg,aes(x=season,y=value,color=variable,linetype=variable))+
   geom_line(size=.6)+
@@ -193,9 +194,10 @@ gg_cum_black <- ggplot(coefcomb_lg,aes(x=season,y=value,color=variable,linetype=
   scale_linetype_manual(values=c(1,5))+
   labs(x="months after harvest (H)",y="cumulative % change in violence")+
   theme_classic()+
-  theme_black()
+  theme_black()+
+  theme(legend.position = c(.85,.15),legend.key.width = unit(1,"cm"))
 
-ggsave("Figures/cumulative_violence.png",gg_cum_white,width=6.5,height=3.5,dpi="retina")
+ggsave("Figures/cumulative_violence.png",gg_cum_white,width=6.5,height=3.5,dpi=200,device="png")
 ggsave("Presentation/cumulative_violence.png",gg_cum_white,width=6.5,height=3.5,dpi="retina")
 ggsave("Online/cumulative_violence.png",gg_cum_black,width=6.5,height=3.5,dpi="retina")
 
@@ -245,7 +247,7 @@ gg_coef_white <- ggplot(coeftab_dt,aes(x=season,y=est))+
   theme_white()+
   theme(axis.line.x=element_blank(),axis.line.y=element_blank())
 
-ggsave("Figures/circular_violence.png",gg_coef_white,width=6.5,height=6.5,dpi="retina")
+ggsave("Figures/circular_violence.png",gg_coef_white,width=6.5,height=6.5,dpi=200)
 
 
 ## the main plot (this goes to my website)

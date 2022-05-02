@@ -92,7 +92,7 @@ gg_cropland_white <- ggplot(xycomb_dt[max_area>0],aes(x=max_area))+
   theme_white()+
   theme(legend.position=c(.82,.82))
 
-ggsave("Figures/cropland_distribution.png",gg_cropland_white,width=6.5,height=3.5,dpi="retina")
+ggsave("Figures/cropland_distribution.png",gg_cropland_white,width=6.5,height=3.5,dpi=200)
 ggsave("Presentation/cropland_distribution.png",gg_cropland_white,width=6.5,height=3.5,dpi="retina")
 ggsave("Online/cropland_distribution.png",gg_cropland_black,width=6.5,height=3.5,dpi="retina")
 
@@ -113,7 +113,7 @@ gg_incidents_white <- ggplot(xycomb_dt[incidents>0],aes(x=incidents))+
   theme_classic()+
   theme_white()
 
-ggsave("Figures/incident_distribution.png",gg_incidents_white,width=6.5,height=3.5,dpi="retina")
+ggsave("Figures/incident_distribution.png",gg_incidents_white,width=6.5,height=3.5,dpi=200)
 ggsave("Presentation/incident_distribution.png",gg_incidents_white,width=6.5,height=3.5,dpi="retina")
 ggsave("Online/incident_distribution.png",gg_incidents_black,width=6.5,height=3.5,dpi="retina")
 
@@ -160,7 +160,7 @@ gg_conflictmaps_white <- ggplot(data = africa) +
   theme_white()+
   theme(axis.line.x=element_blank(),axis.line.y=element_blank(),axis.title = element_blank(),axis.text = element_blank(),legend.position = c(.10,.60),legend.text = element_text(hjust=1))
 
-ggsave("Figures/maps_violence.png",gg_conflictmaps_white,width=6.5,height=6.5,dpi="retina")
+ggsave("Figures/maps_violence.png",gg_conflictmaps_white,width=6.5,height=6.5,dpi=200)
 
 
 gg_conflictmaps_top_black <- ggplot(data = africa) +
@@ -279,7 +279,7 @@ gg_prices_white <- ggplot(prices_dt,aes(x=date,y=price,color=cereal,linetype=cer
 gg_cereals_prices_black <- plot_grid(gg_cereals_black,gg_prices_black,ncol=2,align="h",axis="b")
 gg_cereals_prices_white <- plot_grid(gg_cereals_white,gg_prices_white,ncol=2,align="h",axis="b")
 
-ggsave("Figures/cereals_prices.png",gg_cereals_prices_white,width=6.5,height=3.5,dpi="retina")
+ggsave("Figures/cereals_prices.png",gg_cereals_prices_white,width=6.5,height=3.5,dpi=200)
 ggsave("Presentation/cereals_prices.png",gg_cereals_prices_white,width=6.5,height=3.5,dpi="retina")
 ggsave("Online/cereals_prices.png",gg_cereals_prices_black,width=6.5,height=3.5,dpi="retina")
 
@@ -320,7 +320,7 @@ gg_conflict_black <- ggplot(country_dt,aes(x=reorder(countrylab,incidents),y=inc
   theme_classic()+
   theme_black()
 
-ggsave("Figures/incidents_by_country.png",gg_conflict_white,width=6.5,height=7.5,dpi="retina")
+ggsave("Figures/incidents_by_country.png",gg_conflict_white,width=6.5,height=7.5,dpi=200)
 
 
 datasum_dt <- datacomb_dt[,.(incidents=sum(incidents)),by=.(longitude,latitude)]
@@ -353,7 +353,7 @@ gg_rankmap_black <- ggdraw(aligned_plots_black[[1]]) + draw_plot(aligned_plots_b
 aligned_plots_white <- align_plots(gg_conflict_white,gg_map_white,align="hv", axis="tblr")
 gg_rankmap_white <- ggdraw(aligned_plots_white[[1]]) + draw_plot(aligned_plots_white[[2]],x=.03,y=-.03)
 
-ggsave("Figures/incidents_by_country_map.png",gg_rankmap_white,width=6.5,height=6.5,dpi="retina")
+ggsave("Figures/incidents_by_country_map.png",gg_rankmap_white,width=6.5,height=6.5,dpi=200)
 ggsave("Presentation/incidents_by_country_map.png",gg_rankmap_white,width=6.5,height=6.5,dpi="retina")
 ggsave("Online/incidents_by_country_map.png",gg_rankmap_black,width=6.5,height=6.5,dpi="retina")
 
@@ -378,7 +378,7 @@ gg_map_white <- ggplot(data = africa) +
   theme_white()+
   theme(axis.line.x=element_blank(),axis.line.y=element_blank(),axis.title = element_blank(),axis.text = element_blank(),legend.position = c(.10,.30),legend.text = element_text(hjust=1))
 
-ggsave("Figures/map_population.png",gg_map_white,width=6.5,height=6.5,dpi="retina")
+ggsave("Figures/map_population.png",gg_map_white,width=6.5,height=6.5,dpi=200)
 
 
 #----------------------#
@@ -454,9 +454,10 @@ gg_hs_white <- ggplot(country_month_dt,aes(x=month,y=crop))+
   scale_x_discrete(labels=c("Jan" = "J","Feb" = "F","Mar" = "M","Apr" = "A","May" = "M","Jun" = "J","Jul" = "J","Aug" = "A","Sep" = "S","Oct" = "O","Nov" = "N","Dec" = "D"))+
   labs(x="Months",y="Crops")+
   theme_classic()+
-  theme_white()
+  theme_white()+
+  theme(strip.text=element_text(size=8,colour="gray55",family="sans",face="bold",margin=margin(.1,0,.1,0,"cm")))
 
-ggsave("Figures/harvestseasons.png",gg_hs_white,width=6.5,height=7.5,dpi="retina")
+ggsave("Figures/harvestseasons.png",gg_hs_white,width=6.5,height=7.5,dpi=200)
 
 country_sub <- unique(country_month_dt$country)[seq(1,45,4)]
 
@@ -552,9 +553,10 @@ gg_gs_white <- ggplot(country_month_dt,aes(x=month,y=crop))+
   scale_x_discrete(labels=c("Jan" = "J","Feb" = "F","Mar" = "M","Apr" = "A","May" = "M","Jun" = "J","Jul" = "J","Aug" = "A","Sep" = "S","Oct" = "O","Nov" = "N","Dec" = "D"))+
   labs(x="Months",y="Crops")+
   theme_classic()+
-  theme_white()
+  theme_white()+
+  theme(strip.text=element_text(size=8,colour="gray55",family="sans",face="bold",margin=margin(.1,0,.1,0,"cm")))
 
-ggsave("Figures/growingseasons.png",gg_gs_white,width=6.5,height=7.5,dpi="retina")
+ggsave("Figures/growingseasons.png",gg_gs_white,width=6.5,height=7.5,dpi=200)
 
 
 gg_gs_white <- ggplot(country_month_dt[country %in% country_sub],aes(x=month,y=crop))+

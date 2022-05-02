@@ -127,7 +127,7 @@ gg_coef_white <- ggplot(coeftab_dt,aes(x=season,y=est))+
   theme(axis.line.x=element_blank(),axis.line.y=element_blank())
 
 ## saving the plot
-ggsave("Figures/circular_polit_years.png",gg_coef_white,width=6.5,height=6.5,device="png",dpi="retina")
+ggsave("Figures/circular_polit_years.png",gg_coef_white,width=6.5,height=6.5,device="png",dpi=200)
 
 
 ## circular plots for illustrating the seasonal effect
