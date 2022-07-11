@@ -23,15 +23,9 @@ The data used in the analysis are stored in the data_violence_acled.RData file. 
 
 The R codes to replicate the study are as follows:
 
-- 01-baseline.r replicates the main results of the study, plots the relevant figures.
-- 02-illustrations.r generates a set of descriptive figures of the main text as well as some of the figures of the appendix.
-- 03-robustness_tables.r replicates some of the robustness checks of the study that are presented as Appendix Tables.
-- 04-robustness_latitudes.r generates a figure that addressed the sensitivity of the main results to omitting locations based on latitudes.
-- 05-robustness_years.r generates a figure that addressed the sensitivity of the main results to the time-frame of the data.
-- 06-robustness_datasets.r generates the figure that compares estimated seasonal patterns between ACLED and UCDP data.
-- 07-mechanism_rain.r generates the figure that compares estimated seasonal patterns between 'average' and 'rainy' growing seasons.
-- 08-mechanism_temp.r generates the figure that compares estimated seasonal patterns between 'average' and 'hot' growing seasons.
-- 09-mechanism_dose.r generates the figure that compares estimated seasonal patterns across different cropland area fractions.
+- [01-tables.r](01-tables.r): tables in the main text (main results and mechanisms).
+- [02-illustrations.r](02-illustrations.r): figures in the main text and in the Appendix C.
+- [03-robustness_tables.r](03-robustness_tables.r): tables in the Appendix B (robustness checks).
 
 
 ## License
