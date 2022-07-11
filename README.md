@@ -1,6 +1,6 @@
 # Replication Material
 
-This repository hosts data and R codes for the paper "Agricultural Windfalls and the Seasonality of Political Violence in Africa," co-authored with Justin Hastings and Kadir Atalay.
+This repository hosts data and R codes for the paper "[Agricultural Windfalls and the Seasonality of Political Violence in Africa](https://arxiv.org/abs/2202.07863)," co-authored with Justin Hastings and Kadir Atalay.
 
 ## Data
 
