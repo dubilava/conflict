@@ -30,8 +30,8 @@ The additional data used for generating some of the robustness checks are from t
 The R codes to replicate the study are as follows:
 
 - [01-tables.r](01-tables.r): Tables 1-3 (main text), and Appendix Tables B35-B39.
-- [02-robustness.r](03-robustness_tables.r): Appendix Tables B1:B34.
-- [03-illustrations.r](02-illustrations.r): Figures 1-6, and Appendix Figures C1:C7.
+- [02-robustness.r](03-robustness_tables.r): Appendix Tables B1-B34.
+- [03-illustrations.r](02-illustrations.r): Figures 1-6 (main text), and Appendix Figures C1-C7.
 
 
 ## License
