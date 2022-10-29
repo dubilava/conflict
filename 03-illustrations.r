@@ -761,138 +761,51 @@ ggsave("Figures/map_harvest.eps",gg_rankmap_white,width=6.5,height=6.5,dpi="reti
 
 ## Figure C6: Major crops ----
 
-## dominant crop
-cassava <- raster(paste("Local/Crops/cassava_HarvAreaYield_Geotiff/cassava_HarvestedAreaFraction.tif",sep=""))
+## auxiliary data
+load("auxiliary.RData")
 
-area10 <- aggregate(cassava,fact=12,fun=mean)
-raster_mask <- mask(area10,africa)
-rm <- rasterToPoints(raster_mask)
-rm[,1:2] <- round(rm[,1:2],1)
-a_dt <- data.table(rm)
-colnames(a_dt) <- c("longitude","latitude","cassava_area")
-cassava_dt <- a_dt[order(longitude,latitude)]
+auxiliary_dt[,`:=`(cash_area=apply(auxiliary_dt[,.(cocoa_area,coffee_area)],1,max))]
+auxiliary_dt[,`:=`(Cocoa=ifelse(cocoa_area==cash_area & cocoa_area>0,cocoa_area,0),Coffee=ifelse(coffee_area==cash_area & coffee_area>0,coffee_area,0))]
 
+datacomb_dt <- merge(datacomb_dt,auxiliary_dt,by=c("longitude","latitude"),all.x=T)
+dataset_dt <- merge(dataset_dt,auxiliary_dt,by=c("longitude","latitude"),all.x=T)
 
-## cash crops
-cocoa <- raster(paste("Local/Crops/cocoa_HarvAreaYield_Geotiff/cocoa_HarvestedAreaFraction.tif",sep=""))
+datacomb_dt[,`:=`(cassava_more=ifelse(cassava_area>crop_area,1,0))]
+datacomb_dt[,`:=`(cash_more=ifelse(cash_area>crop_area,1,0))]
+datacomb_dt[,`:=`(cocoa_more=ifelse(cocoa_area>crop_area,1,0))]
+datacomb_dt[,`:=`(coffee_more=ifelse(coffee_area>crop_area,1,0))]
 
-area10 <- aggregate(cocoa,fact=12,fun=mean)
-raster_mask <- mask(area10,africa)
-rm <- rasterToPoints(raster_mask)
-rm[,1:2] <- round(rm[,1:2],1)
-a_dt <- data.table(rm)
-colnames(a_dt) <- c("longitude","latitude","cocoa_area")
-cocoa_dt <- a_dt[order(longitude,latitude)]
-
-coffee <- raster(paste("Local/Crops/coffee_HarvAreaYield_Geotiff/coffee_HarvestedAreaFraction.tif",sep=""))
-
-area10 <- aggregate(coffee,fact=12,fun=mean)
-raster_mask <- mask(area10,africa)
-rm <- rasterToPoints(raster_mask)
-rm[,1:2] <- round(rm[,1:2],1)
-a_dt <- data.table(rm)
-colnames(a_dt) <- c("longitude","latitude","coffee_area")
-coffee_dt <- a_dt[order(longitude,latitude)]
-
-cash_dt <- Reduce(function(...) merge(...,all=T,by=c("longitude","latitude")),list(cocoa_dt,coffee_dt))
-
-cash_dt[,`:=`(cash_area=apply(cash_dt[,-c(1:2)],1,max))]
-cash_dt[,`:=`(Cocoa=ifelse(cocoa_area==cash_area & cocoa_area>0,cocoa_area,0),Coffee=ifelse(coffee_area==cash_area & coffee_area>0,coffee_area,0))]
-
-
-## pastoralism
-pastoral <- raster(paste("Local/Nomads/past_suit.asc",sep=""))
-
-area10 <- aggregate(pastoral,fact=24,fun=mean)
-raster_mask <- mask(area10,africa)
-rm <- rasterToPoints(raster_mask)
-rm[,1:2] <- round(rm[,1:2],1)
-a_dt <- data.table(rm)
-colnames(a_dt) <- c("longitude","latitude","pastoral_area")
-pastoral_dt <- a_dt[order(longitude,latitude)]
-
-
-## mining
-mines_dt <- as.data.table(read_dta("Local/Mining/BCRT_baseline.dta"))
-
-mines_dt$latitude <- round(round(mines_dt$latitude,2)-.499)+.5
-mines_dt$longitude <- round(round(mines_dt$longitude,2)-.499)+.5
-
-mines_dt <- mines_dt[,.(mines=max(mines)),by=.(year,longitude,latitude)]
-
-mines_dt <- mines_dt[complete.cases(mines_dt)]
-
-mines_dt <- mines_dt[,.(mines_area=mean(mines)),by=.(longitude,latitude)]
-mines_dt <- unique(mines_dt)
-
-mines_dt[,`:=`(mines_dum=ifelse(mines_area==1,1,0))]
-
-
-dataset_dt <- merge(dataset_dt,cassava_dt,by=c("longitude","latitude"),all.x=T)
-dataset_dt <- merge(dataset_dt,cash_dt,by=c("longitude","latitude"),all.x=T)
-dataset_dt <- merge(dataset_dt,pastoral_dt,by=c("longitude","latitude"),all.x=T)
-dataset_dt <- merge(dataset_dt,mines_dt,by=c("longitude","latitude"),all.x=T)
-
-dataset_dt[is.na(mines_area)]$mines_area <- 0
-dataset_dt[is.na(mines_dum)]$mines_dum <- 0
-
+datacomb_dt[,`:=`(cassava_some=ifelse(cassava_area>0,1,0))]
+datacomb_dt[,`:=`(cash_some=ifelse(cash_area>0,1,0))]
+datacomb_dt[,`:=`(cocoa_some=ifelse(cocoa_area>0,1,0))]
+datacomb_dt[,`:=`(coffee_some=ifelse(coffee_area>0,1,0))]
 
 dataset_dt[,`:=`(cassava_more=ifelse(cassava_area>crop_area,1,0))]
 dataset_dt[,`:=`(cash_more=ifelse(cash_area>crop_area,1,0))]
 dataset_dt[,`:=`(cocoa_more=ifelse(cocoa_area>crop_area,1,0))]
 dataset_dt[,`:=`(coffee_more=ifelse(coffee_area>crop_area,1,0))]
+
 dataset_dt[,`:=`(cassava_some=ifelse(cassava_area>0,1,0))]
 dataset_dt[,`:=`(cash_some=ifelse(cash_area>0,1,0))]
 dataset_dt[,`:=`(cocoa_some=ifelse(cocoa_area>0,1,0))]
 dataset_dt[,`:=`(coffee_some=ifelse(coffee_area>0,1,0))]
 
 
-datacomb_dt <- merge(datacomb_dt,cassava_dt,by=c("longitude","latitude"),all.x=T)
-datacomb_dt <- merge(datacomb_dt,cash_dt,by=c("longitude","latitude"),all.x=T)
-datacomb_dt <- merge(datacomb_dt,pastoral_dt,by=c("longitude","latitude"),all.x=T)
-datacomb_dt <- merge(datacomb_dt,mines_dt,by=c("longitude","latitude"),all.x=T)
-
-datacomb_dt[is.na(mines_area)]$mines_area <- 0
-datacomb_dt[is.na(mines_dum)]$mines_dum <- 0
-
-
-datacomb_dt[,`:=`(cassava_more=ifelse(cassava_area>crop_area,1,0))]
-datacomb_dt[,`:=`(cash_more=ifelse(cash_area>crop_area,1,0))]
-datacomb_dt[,`:=`(cocoa_more=ifelse(cocoa_area>crop_area,1,0))]
-datacomb_dt[,`:=`(coffee_more=ifelse(coffee_area>crop_area,1,0))]
-datacomb_dt[,`:=`(cassava_some=ifelse(cassava_area>0,1,0))]
-datacomb_dt[,`:=`(cash_some=ifelse(cash_area>0,1,0))]
-datacomb_dt[,`:=`(cocoa_some=ifelse(cocoa_area>0,1,0))]
-datacomb_dt[,`:=`(coffee_some=ifelse(coffee_area>0,1,0))]
-
 ## second harvest season
-load("Local/second.RData")
+load("second.RData")
 
 colnames(second_dt) <- c("longitude","latitude","area_second","crop_second")
-
-dataset_dt <- merge(dataset_dt,second_dt[,.(longitude,latitude,crop_second)],by=c("longitude","latitude"),all.x=T)
-dataset_dt[is.na(crop_second)]$crop_second <- "None"
-
-dataset_dt[,`:=`(major_crop=ifelse(tot_area>0 & crop_area/tot_area>.8,"Unique",ifelse(tot_area>0,"Mixed","None")))]
-
 
 datacomb_dt <- merge(datacomb_dt,second_dt[,.(longitude,latitude,crop_second)],by=c("longitude","latitude"),all.x=T)
 datacomb_dt[is.na(crop_second)]$crop_second <- "None"
 
 datacomb_dt[,`:=`(major_crop=ifelse(tot_area>0 & crop_area/tot_area>.8,"Unique",ifelse(tot_area>0,"Mixed","None")))]
 
+dataset_dt <- merge(dataset_dt,second_dt[,.(longitude,latitude,crop_second)],by=c("longitude","latitude"),all.x=T)
+dataset_dt[is.na(crop_second)]$crop_second <- "None"
 
-dataset_dt[is.na(cash_area)]$cash_area <- 0
-dataset_dt[is.na(cash_more)]$cash_more <- 0
-dataset_dt[is.na(cassava_area)]$cassava_area <- 0
-dataset_dt[is.na(cassava_more)]$cassava_more <- 0
-dataset_dt[is.na(pastoral_area)]$pastoral_area <- 0
+dataset_dt[,`:=`(major_crop=ifelse(tot_area>0 & crop_area/tot_area>.8,"Unique",ifelse(tot_area>0,"Mixed","None")))]
 
-datacomb_dt[is.na(cash_area)]$cash_area <- 0
-datacomb_dt[is.na(cash_more)]$cash_more <- 0
-datacomb_dt[is.na(cassava_area)]$cassava_area <- 0
-datacomb_dt[is.na(cassava_more)]$cassava_more <- 0
-datacomb_dt[is.na(pastoral_area)]$pastoral_area <- 0
 
 ## plot maps
 subset_dt <- datacomb_dt[yearmo==max(yearmo),.(longitude,latitude,crop_area,crop_second,major_crop,cash_area,cash_more,cassava_area,cassava_more,pastoral_area,mines_area,mines_dum=as.factor(mines_dum))]

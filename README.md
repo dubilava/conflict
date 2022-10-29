@@ -4,10 +4,10 @@ This repository hosts data and R codes for the paper "[Agricultural Windfalls an
 
 ## Data
 
-The data used for generating the main results of the study are stored in the data_violence_acled.RData file. This file compiles the data from the following sources:
+The data used for generating the main results of the study are stored in the [data_violence_acled.RData](data_violence_acled.RData) file. This file compiles the data from the following sources:
 
 - The *conflict* data, obtained from Armed Conflict Location & Event Data Project (ACLED) available at: [http://acleddata.com](www.acleddata.com). For details, see: Raleigh, C., A. Linke, H. Hegre, and J. Karlsen (2010). Introducing ACLED: "An Armed Conflict Location and Event Dataset: Special Data Feature." Journal of Peace Research 47(5): 651–660.
-  * As a robustness check, we also consider the Uppsala Conflict Data Program (UCDP) Georeferenced Event Dataset (global version 21.1) available at: [https://ucdp.uu.se](https://ucdp.uu.se). 
+  * As a robustness check, we also consider the Uppsala Conflict Data Program (UCDP) Georeferenced Event Dataset (global version 21.1) available at: [https://ucdp.uu.se](https://ucdp.uu.se). These data are stored in the [data_violence_ucdp.RData](data_violence_ucdp.RData) file. 
 
 - The *commodity price* data, obtained from the International Monetary Fund's online portal for Primary Commodity Prices, available at [https://www.imf.org/en/Research/commodity-prices](https://www.imf.org/en/Research/commodity-prices).
 
@@ -16,9 +16,15 @@ The data used for generating the main results of the study are stored in the dat
 
 - The *population* data obtained from the Center for International Earth Science Information Network at Columbia University available at [https://sedac.ciesin.columbia.edu](https://sedac.ciesin.columbia.edu).
 
+### Weather Data
+
+The weather data used for testing the mechanism are stored in the [precipitation.RData](precipitation.RData) and [temperature.RData](temperature.RData) files. These files compile the data from the following source:
+
 - The *weather* data are the ERA5 reanalysis gridded data on daily 2m above the surface air temperatures and monthly averaged total precipitation from European Centre for Medium-Range Weather Forecasts (ECMWF) Copernicus Project, available at [https://cds.climate.copernicus.eu/cdsapp#!/dataset/reanalysis-era5-single-levels](https://cds.climate.copernicus.eu/cdsapp#!/dataset/reanalysis-era5-single-levels). 
 
-The additional data used for generating some of the robustness checks are from the following sources:
+### Auxiliary Data
+
+The additional data used for generating some of the robustness checks are stored in the [auxiliary.RData](auxiliary.RData) file. This file containes data on other crop production from the same source as the *crop harvest* data described above, as well as from the following two sources:
 
 - The mining data are from Berman, N, Couttenier, M., Rohner, D., and M. Thoenig (2017). "This Mine Is Mine! How Minerals Fuel Conflicts in Africa." American Economic Review, 107 (6): 1564-1610. Available at [https://www.aeaweb.org/articles?id=10.1257/aer.20150774](https://www.aeaweb.org/articles?id=10.1257/aer.20150774)
 
