@@ -356,7 +356,7 @@ gg_coef_white <- ggplot(coeftab_dt[actor=="Militias"],aes(x=season,y=est))+
   theme(axis.line.x=element_blank(),axis.line.y=element_blank(),axis.title = element_text(size=14),axis.text = element_text(size=12))
 
 
-gg_coef_black<- ggplot(coeftab_dt[actor=="Militias"],aes(x=season,y=est))+
+gg_coef_black <- ggplot(coeftab_dt[actor=="Militias"],aes(x=season,y=est))+
   geom_ribbon(aes(ymin=est-1.96*se,ymax=est+1.96*se),fill="gray40",alpha=.25)+
   geom_line(color="gray20",size=.6)+
   geom_hline(yintercept = seq(-16,12,4),color="gray60",size=.3,linetype=3) +
@@ -369,12 +369,15 @@ gg_coef_black<- ggplot(coeftab_dt[actor=="Militias"],aes(x=season,y=est))+
   theme(axis.line.x=element_blank(),axis.line.y=element_blank(),axis.title = element_text(size=14),axis.text = element_text(size=12))
 
 # png
-ggsave("Figures/circular_violence_polit.png",gg_coef_white,width=6.5,height=6.5,dpi=200)
-ggsave("Figures/circular_violence_polit_bw.png",gg_coef_black,width=6.5,height=6.5,dpi="retina")
+ggsave("Figures/circular_violence_milit.png",gg_coef_white,width=6.5,height=6.5,dpi=200)
+ggsave("Figures/circular_violence_milit_bw.png",gg_coef_black,width=6.5,height=6.5,dpi="retina")
 
 # eps
-ggsave("Figures/circular_violence_polit.eps",gg_coef_white,width=6.5,height=6.5,dpi="retina",device=cairo_ps)
-ggsave("Figures/circular_violence_polit_bw.eps",gg_coef_black,width=6.5,height=6.5,dpi="retina",device=cairo_ps)
+ggsave("Figures/circular_violence_milit.eps",gg_coef_white,width=6.5,height=6.5,dpi="retina",device=cairo_ps)
+ggsave("Figures/circular_violence_milit_bw.eps",gg_coef_black,width=6.5,height=6.5,dpi="retina",device=cairo_ps)
+
+# # web
+# ggsave("../../dubilava.github.io/Papers/conflict.png",gg_coef_white,width=6.5,height=6.5,dpi="retina")
 
 
 ## Figure 6: Dose-response ----
